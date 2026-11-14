@@ -1,69 +1,940 @@
-import Image from "next/image";
+"use client";
+
+import React, { useState, useEffect, useRef, useSyncExternalStore } from "react";
+import Link from "next/link";
+import { INDUSTRIES } from "./industries-data";
+
+const SECTOR_BACKGROUNDS: Record<string, string> = {
+  energy: "/industries/energy.jpg",
+  mining: "/industries/mining.jpg",
+  finance: "/industries/finance.jpg",
+  agriculture: "/industries/agriculture.jpg",
+  "supply-chain": "/industries/supply-chain.jpg",
+  healthcare: "/industries/healthcare.jpg",
+};
+
+// Official Daigo Deploy Vector Logo Icon Component
+function DaigoIcon({ className = "w-7 h-5" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 142 78"
+      fill="currentColor"
+      className={className}
+      aria-hidden="true"
+    >
+      {/* Lower slanted parallelogram */}
+      <path d="M 34 42 L 76 42 L 41 77 L 0 77 Z" />
+      {/* Upper chevron arrow */}
+      <path d="M 3 0 L 98 0 C 105 0 108 2 112 5 L 141 36 L 102 77 L 67 77 L 109 36 C 102 27 94 22 76 22 L 25 22 Z" />
+    </svg>
+  );
+}
+
+// Seamless Infinite Cyclic Hero Video Player (Dual-Buffer Ping-Pong Smooth Loop)
+function SeamlessHeroVideo() {
+  const videoRefA = useRef<HTMLVideoElement>(null);
+  const videoRefB = useRef<HTMLVideoElement>(null);
+  const [activeSlot, setActiveSlot] = useState<"A" | "B">("A");
+  const isTransitioning = useRef(false);
+
+  useEffect(() => {
+    const vA = videoRefA.current;
+    const vB = videoRefB.current;
+    if (!vA || !vB) return;
+
+    vA.muted = true;
+    vB.muted = true;
+    vA.setAttribute("playsinline", "");
+    vB.setAttribute("playsinline", "");
+
+    // Start video A immediately
+    vA.play().catch(() => { });
+
+    // Crisp, smooth 0.5s dissolve without ghosting or hesitation
+    const CROSSFADE_SEC = 0.5;
+    let animFrame: number;
+
+    const checkLoop = () => {
+      const activeEl = activeSlot === "A" ? vA : vB;
+      const standbyEl = activeSlot === "A" ? vB : vA;
+      const nextSlot = activeSlot === "A" ? "B" : "A";
+
+      if (
+        !isTransitioning.current &&
+        activeEl.duration &&
+        !isNaN(activeEl.duration) &&
+        activeEl.duration > 0
+      ) {
+        const timeLeft = activeEl.duration - activeEl.currentTime;
+
+        // Precisely trigger crossfade at 0.5s before end
+        if (timeLeft <= CROSSFADE_SEC && timeLeft > 0) {
+          isTransitioning.current = true;
+          standbyEl.currentTime = 0;
+          standbyEl
+            .play()
+            .then(() => {
+              setActiveSlot(nextSlot);
+              setTimeout(() => {
+                isTransitioning.current = false;
+              }, CROSSFADE_SEC * 1000 + 100);
+            })
+            .catch(() => {
+              isTransitioning.current = false;
+            });
+        }
+      }
+
+      animFrame = requestAnimationFrame(checkLoop);
+    };
+
+    animFrame = requestAnimationFrame(checkLoop);
+
+    // Watchdog: ensures video NEVER pauses or freezes under any circumstance
+    const watchdog = setInterval(() => {
+      const current = activeSlot === "A" ? vA : vB;
+      if (current.paused) {
+        current.play().catch(() => { });
+      }
+    }, 1000);
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        const current = activeSlot === "A" ? vA : vB;
+        current.play().catch(() => { });
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      cancelAnimationFrame(animFrame);
+      clearInterval(watchdog);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [activeSlot]);
+
+  return (
+    <div className="absolute inset-0 w-full h-full overflow-hidden z-0 pointer-events-none select-none bg-black">
+      {/* Video Slot A */}
+      <video
+        ref={videoRefA}
+        autoPlay
+        loop
+        muted
+        playsInline
+        preload="auto"
+        style={{ transition: "opacity 500ms ease-in-out" }}
+        className={`absolute inset-0 w-full h-full object-cover ${activeSlot === "A" ? "opacity-100 z-10" : "opacity-0 z-0"
+          }`}
+      >
+        <source src="/1113.mp4" type="video/mp4" />
+        <source src="/1113.mov" type="video/quicktime" />
+      </video>
+
+      {/* Video Slot B */}
+      <video
+        ref={videoRefB}
+        loop
+        muted
+        playsInline
+        preload="auto"
+        style={{ transition: "opacity 500ms ease-in-out" }}
+        className={`absolute inset-0 w-full h-full object-cover ${activeSlot === "B" ? "opacity-100 z-10" : "opacity-0 z-0"
+          }`}
+      >
+        <source src="/1113.mp4" type="video/mp4" />
+        <source src="/1113.mov" type="video/quicktime" />
+      </video>
+    </div>
+  );
+}
+
+const themeSubscribe = (callback: () => void) => {
+  if (typeof window === "undefined") return () => { };
+  window.addEventListener("themechange", callback);
+  window.addEventListener("storage", callback);
+  return () => {
+    window.removeEventListener("themechange", callback);
+    window.removeEventListener("storage", callback);
+  };
+};
+
+const getThemeSnapshot = (): "light" | "dark" => {
+  if (typeof document === "undefined") return "light";
+  return document.documentElement.classList.contains("dark") ? "dark" : "light";
+};
+
+const getThemeServerSnapshot = (): "light" | "dark" => "light";
 
 export default function Home() {
+  const theme = useSyncExternalStore(themeSubscribe, getThemeSnapshot, getThemeServerSnapshot);
+  const [activeSectorId, setActiveSectorId] = useState<string>("energy");
+  const [isA11yOpen, setIsA11yOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [activeProcessCard, setActiveProcessCard] = useState<number | null>(null);
+
+  const toggleTheme = () => {
+    const nextTheme = theme === "light" ? "dark" : "light";
+    try {
+      localStorage.setItem("daigo-theme", nextTheme);
+    } catch { }
+    if (nextTheme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+    window.dispatchEvent(new Event("themechange"));
+  };
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 40);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const isDark = theme === "dark";
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
+    <div className="min-h-screen bg-white text-zinc-950 dark:bg-[#060709] dark:text-[#e6e8eb] flex flex-col font-sans transition-colors duration-200 selection:bg-zinc-200 dark:selection:bg-zinc-700 selection:text-black dark:selection:text-white">
+      {/* 1. TOP ANNOUNCEMENT BAR */}
+      <aside
+        aria-label="Announcement"
+        className="w-full bg-zinc-100/80 dark:bg-[#0b0c0e]/80 backdrop-blur-md border-b border-zinc-200/80 dark:border-white/[0.07] px-4 py-2.5 text-center text-xs tracking-wide text-zinc-600 dark:text-zinc-400 flex items-center justify-center gap-2 transition-colors relative z-40"
+      >
+        <span>Flowboard Team launches Daigo Deploy to accelerate AI adoption across African enterprises</span>
+        <Link
+          href="/blog/flowboard-launches-daigo-deploy"
+          className="text-zinc-900 dark:text-zinc-200 underline underline-offset-4 hover:text-black dark:hover:text-white transition-colors cursor-pointer font-medium"
+        >
+          Read announcement
+        </Link>
+      </aside>
+
+      {/* 2. NAVIGATION HEADER - Frosted Glass overlay over the Hero background */}
+      <header
+        className={`sticky top-0 z-40 w-full transition-all duration-300 ${scrolled
+          ? "backdrop-blur-xl backdrop-saturate-150 bg-white/85 dark:bg-[#060709]/85 border-b border-zinc-200/80 dark:border-white/[0.08] shadow-xs dark:shadow-md"
+          : "backdrop-blur-md backdrop-saturate-150 bg-black/40 border-b border-white/15 shadow-[inset_0_-1px_0_0_rgba(255,255,255,0.08)]"
+          }`}
+      >
+        <div className="max-w-7xl mx-auto px-6 h-18 flex items-center justify-between">
+          {/* Logo with official new emblem */}
           <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="#"
+            className={`flex items-center gap-3 group cursor-pointer transition-colors ${scrolled ? "text-zinc-950 dark:text-white" : "text-white"
+              }`}
+            aria-label="Daigo Deploy home"
           >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
+            <DaigoIcon
+              className={`h-5 w-auto transition-colors shrink-0 ${scrolled
+                ? "text-zinc-950 dark:text-white group-hover:text-zinc-600 dark:group-hover:text-zinc-300"
+                : "text-white group-hover:text-zinc-300"
+                }`}
             />
-            Deploy Now
+            <span className="text-xl sm:text-2xl font-bold tracking-tight">
+              Daigo Deploy
+            </span>
           </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+          {/* Navigation Links */}
+          <nav className="flex items-center gap-6 sm:gap-8">
+            <Link
+              href="/blog"
+              className={`text-[11px] font-semibold tracking-[0.2em] uppercase cursor-pointer transition-colors ${scrolled
+                ? "text-zinc-800 hover:text-black dark:text-zinc-200 dark:hover:text-white"
+                : "text-white/85 hover:text-white"
+                }`}
+            >
+              Blog
+            </Link>
+            <Link
+              href="/careers"
+              className={`text-[11px] font-semibold tracking-[0.2em] uppercase cursor-pointer transition-colors ${scrolled
+                ? "text-zinc-800 hover:text-black dark:text-zinc-200 dark:hover:text-white"
+                : "text-white/85 hover:text-white"
+                }`}
+            >
+              Careers
+            </Link>
+          </nav>
         </div>
-      </main>
+      </header>
+
+      {/* 3. HERO SECTION (With seamless infinite cyclic video 1113.mov extending behind frosted glass header) */}
+      <section
+        id="hero"
+        className="-mt-[72px] pt-[72px] relative w-full min-h-[96vh] flex items-end justify-center overflow-hidden bg-black transition-colors duration-300 pb-10 sm:pb-14 lg:pb-16"
+      >
+        {/* Seamless Infinite Cyclic Video Player (100% Raw Video Quality, Zero Overlays) */}
+        <SeamlessHeroVideo />
+
+        {/* Hero Content (Positioned down in the lower section with perfectly aligned top edges) */}
+        <div className="relative z-20 max-w-7xl w-full mx-auto px-6 pt-48 sm:pt-60 lg:pt-72 pb-2 sm:pb-4 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-start">
+          {/* Left: Giant Typography */}
+          <div className="lg:col-span-7">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-normal tracking-[-0.035em] text-white leading-[1.08] drop-shadow-md">
+              Intelligence Behind
+              <br />
+              Every Mission-Critical
+              <br />
+              Operation.
+            </h1>
+          </div>
+
+          {/* Right: Mission Statement & CTA Button (Top-aligned with headline) */}
+          <div className="lg:col-span-5 flex flex-col justify-start pt-1.5 sm:pt-2 max-w-xl">
+            <div className="space-y-6 text-white text-sm sm:text-base md:text-lg leading-relaxed font-normal drop-shadow-[0_1px_6px_rgba(0,0,0,0.8)]">
+              <p>
+                We embed engineering teams within your business to solve complex challenges and build AI systems around the way you work.
+              </p>
+            </div>
+
+            <div className="mt-8">
+              <Link
+                href="/demo"
+                className="inline-flex items-center justify-center border border-white/60 text-white bg-white/10 hover:bg-white hover:text-black transition-all duration-200 px-8 py-3 text-xs tracking-[0.25em] font-medium uppercase cursor-pointer backdrop-blur-sm shadow-lg"
+              >
+                Get Started
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 4. BACKED BY BANNER & WHAT WE DO SECTION (Pure White Background) */}
+      <section
+        style={{ backgroundColor: "#ffffff" }}
+        className="relative w-full border-t border-zinc-200 bg-white text-zinc-950 py-20 px-6 transition-colors"
+      >
+        <div className="max-w-7xl mx-auto">
+          {/* Backed By Credibility Bar */}
+          <div className="pb-16 border-b border-zinc-200 flex flex-col xl:flex-row items-start xl:items-center justify-between gap-8">
+            <p className="text-sm sm:text-base text-zinc-800 max-w-xl font-normal leading-relaxed">
+              Credit analysis, fraud detection, customer servicing, regulatory reporting and document processing, deployed within your security and compliance frameworks.
+            </p>
+
+            {/* Investor & Partner Logos */}
+            <div className="flex items-center flex-wrap sm:flex-nowrap gap-6 sm:gap-8 text-zinc-500 font-medium text-xs tracking-wider uppercase py-1 select-none">
+              {/* Anthropic */}
+              <div className="flex items-center gap-2 hover:text-zinc-950 transition-colors shrink-0" title="Anthropic">
+                <svg viewBox="0 0 24 24" fill="currentColor" className="h-4.5 w-4.5 shrink-0" aria-hidden="true">
+                  <path d="M17.304 3.541h-3.672l6.696 16.918H24Zm-10.608 0L0 20.459h3.744l1.37-3.553h7.005l1.369 3.553h3.744L10.536 3.541Zm-.371 10.223L8.616 7.82l2.291 5.945Z" />
+                </svg>
+                <span className="font-semibold tracking-wider">Anthropic</span>
+              </div>
+
+              {/* OpenAI */}
+              <div className="flex items-center gap-2 hover:text-zinc-950 transition-colors shrink-0" title="OpenAI">
+                <svg viewBox="0 0 24 24" fill="currentColor" className="h-4.5 w-4.5 shrink-0" aria-hidden="true">
+                  <path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z" />
+                </svg>
+                <span className="font-semibold tracking-wider">OpenAI</span>
+              </div>
+
+              {/* Palantir */}
+              <div className="flex items-center gap-2 hover:text-zinc-950 transition-colors shrink-0" title="Palantir">
+                <svg viewBox="0 0 24 24" fill="currentColor" className="h-4.5 w-4.5 shrink-0" aria-hidden="true">
+                  <path d="M20.147 18L12 21.178 3.853 18 2.5 20.343 12 24l9.5-3.657L20.147 18zM12 0a9.5 9.5 0 1 0 0 19 9.5 9.5 0 0 0 0-19zm0 16.078a6.568 6.568 0 1 1 0-13.136 6.568 6.568 0 0 1 0 13.136z" />
+                </svg>
+                <span className="font-semibold tracking-wider">Palantir</span>
+              </div>
+
+              {/* Databricks */}
+              <div className="flex items-center gap-2 hover:text-zinc-950 transition-colors shrink-0" title="Databricks">
+                <svg viewBox="0 0 24 24" fill="currentColor" className="h-4.5 w-4.5 shrink-0" aria-hidden="true">
+                  <path d="M.95 14.184L12 20.403l9.919-5.55v2.21L12 22.662l-10.484-5.96-.565.308v.77L12 24l11.05-6.218v-4.317l-.515-.309L12 19.118l-9.867-5.653v-2.21L12 16.805l11.05-6.218V6.32l-.515-.308L12 11.974 2.647 6.681 12 1.388l7.76 4.368.668-.411v-.566L12 0 .95 6.27v.72L12 13.207l9.919-5.55v2.26L12 15.52z" />
+                </svg>
+                <span className="font-semibold tracking-wider">Databricks</span>
+              </div>
+
+              {/* Pinecone */}
+              <div className="flex items-center gap-2 hover:text-zinc-950 transition-colors shrink-0" title="Pinecone">
+                <svg viewBox="0 0 256 288" fill="currentColor" className="h-4.5 w-4.5 shrink-0" aria-hidden="true">
+                  <path d="M108.634 254.436c9.08 0 16.44 7.361 16.44 16.442s-7.36 16.44-16.44 16.44s-16.442-7.36-16.442-16.44s7.361-16.442 16.442-16.442m91.216-29.998l16.247 4.814L203.2 272.78a8.47 8.47 0 0 1-8.7 6.046l-3.983-.273l-.098.08l-41.39-2.904l1.152-16.906l27.808 1.887l-18.205-26.262l13.926-9.656l18.229 26.295zm-176.837-30.09l16.903 1.197l-1.98 27.804L64.15 205.12l9.677 13.91l-26.248 18.248l26.792 7.895l-4.79 16.255l-43.732-12.885a8.47 8.47 0 0 1-6.058-8.726zM132.15 170.67l30.508 36.832l-13.75 11.389l-18.156-21.92l-5.886 33.702l-17.587-3.074l5.892-33.755l-24.442 14.412l-9.063-15.383l41.079-24.2a8.93 8.93 0 0 1 11.405 1.997m85.354-24.71l15.239-8.292l22.2 40.805a8.675 8.675 0 0 1-1.926 10.69l-3.141 2.714l-32.05 27.893l-11.386-13.09l21.548-18.747l-32.095-5.781l3.078-17.074l32.073 5.779zM37.782 103.298l11.48 13.008l-21.251 18.743l32.156 5.614l-2.98 17.091l-32.192-5.618l13.827 24.998l-15.18 8.398l-22.558-40.776a8.675 8.675 0 0 1 1.85-10.703zm108.694-13.42l30.404 36.734l-13.753 11.384l-18.152-21.93l-5.886 33.712l-17.587-3.074l5.872-33.624l-24.349 14.274l-9.027-15.403l37.4-21.929l.038-.142l.165.021l3.485-2.032a8.93 8.93 0 0 1 11.39 2.01m39.18-18.065l6.65-16.024l43.012 17.85a8.675 8.675 0 0 1 5.218 9.517l-.716 3.982l-7.345 41.78l-17.086-3.01l4.924-27.968l-28.537 15.772l-8.386-15.188l28.591-15.784zm-81.939-31.577l.74 17.334l-28.414 1.214l21.43 24.49l-13.056 11.424L62.95 70.173l-5.001 28l-17.078-3.054l8.184-45.759a8.674 8.674 0 0 1 8.17-7.139l4.02-.18l.09-.065zm58.121-36.965l30.267 36.965l-13.814 11.31l-17.964-21.943l-6.059 33.668l-17.57-3.162l6.068-33.743l-24.526 14.34l-9.007-15.415L150.428 1.22a8.93 8.93 0 0 1 11.41 2.052" />
+                </svg>
+                <span className="font-semibold tracking-wider">Pinecone</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Section: What We Do */}
+          <div className="pt-16 grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+            <div className="lg:col-span-7">
+              <span className="text-xs uppercase tracking-[0.2em] text-zinc-500 block mb-4 font-mono">
+                What We Do
+              </span>
+              <h2 className="text-4xl sm:text-5xl lg:text-6xl font-normal tracking-tight text-zinc-950 leading-tight">
+                Forward deployed engineering for African enterprises.
+              </h2>
+            </div>
+
+            <div className="lg:col-span-5 pt-2">
+              <p className="text-base sm:text-lg text-zinc-900 leading-relaxed font-normal border-l-2 border-zinc-900 pl-6">
+                Africa&apos;s businesses operate across diverse realities: varied infrastructure, multiple languages, evolving regulatory environments, and fragmented data. Our Forward Deployed Engineers work alongside local teams to understand these complexities and build AI systems designed for their environments. Not adapted as an afterthought, but engineered for the ground realities from day one.
+              </p>
+            </div>
+          </div>
+
+          {/* Forward Deployed Engineers at Work with image background */}
+          <div
+            className="mt-14 relative w-full h-80 sm:h-96 rounded-none overflow-hidden border border-zinc-200 shadow-xl group bg-cover bg-center"
+            style={{
+              backgroundImage: `url('/engineers-at-work.jpg')`,
+            }}
+          >
+            {/* In-situ field telemetry callout (Styled with transparent glass matching the header) */}
+            <div className="absolute bottom-6 left-6 right-6 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 p-5 sm:p-6 rounded-none backdrop-blur-md backdrop-saturate-150 bg-white/15 border border-white/30 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_8px_24px_rgba(0,0,0,0.15)] transition-all duration-300">
+              <p className="text-sm sm:text-base md:text-lg text-white font-semibold text-left tracking-wide drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] pr-4 max-w-2xl">
+                We take on the complex, high-ambiguity challenges that conventional software cannot solve.
+              </p>
+              <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 shrink-0">
+                <div
+                  style={{ fontFamily: "'Orbitron', sans-serif" }}
+                  className="px-3.5 py-1.5 rounded-none bg-white/20 border border-white/35 backdrop-blur-sm text-xs sm:text-sm font-bold uppercase tracking-wider text-white whitespace-nowrap drop-shadow-sm"
+                >
+                  First principles
+                </div>
+                <div
+                  style={{ fontFamily: "'Orbitron', sans-serif" }}
+                  className="px-3.5 py-1.5 rounded-none bg-white/20 border border-white/35 backdrop-blur-sm text-xs sm:text-sm font-bold uppercase tracking-wider text-white whitespace-nowrap drop-shadow-sm"
+                >
+                  Context
+                </div>
+                <div
+                  style={{ fontFamily: "'Orbitron', sans-serif" }}
+                  className="px-3.5 py-1.5 rounded-none bg-white/20 border border-white/35 backdrop-blur-sm text-xs sm:text-sm font-bold uppercase tracking-wider text-white whitespace-nowrap drop-shadow-sm"
+                >
+                  Scale
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 5. "BEYOND OFF-THE-SHELF" INTERACTIVE SECTORS - 100% Original Clear Images & Crisp White Cards */}
+      <section
+        id="sectors"
+        className="relative w-full py-24 px-6 border-t border-zinc-200 dark:border-white/[0.06] overflow-hidden transition-colors"
+      >
+        {/* Dynamic Industry Background Images (100% Original Quality, Zero Overlays or White Wash) */}
+        <div className="absolute inset-0 overflow-hidden">
+          {Object.entries(SECTOR_BACKGROUNDS).map(([sectorKey, imgUrl]) => {
+            const isCurrent = sectorKey === activeSectorId;
+            return (
+              <div
+                key={sectorKey}
+                className={`absolute inset-0 bg-cover bg-center transition-opacity duration-300 ease-out will-change-[opacity] ${isCurrent ? "opacity-100 z-10" : "opacity-0 pointer-events-none z-0"
+                  }`}
+                style={{
+                  backgroundImage: `url('${imgUrl}')`,
+                }}
+              />
+            );
+          })}
+        </div>
+
+        <div className="max-w-7xl mx-auto relative z-20">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-10 gap-4">
+            <div>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-normal tracking-tight text-white mb-2 drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)]">
+                Beyond Off-the-Shelf.
+              </h2>
+              <p className="text-white/90 text-xs sm:text-sm font-light tracking-wide drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+                Mission-specific AI built for operators in
+              </p>
+            </div>
+
+            <Link
+              href="/industries"
+              className="text-xs tracking-wider font-semibold text-white hover:text-zinc-200 transition-colors flex items-center gap-2 cursor-pointer pb-2 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]"
+            >
+              See All Industries <span>&rarr;</span>
+            </Link>
+          </div>
+
+          {/* 6 Industries Interactive Grid (01 to 06) - Restored Length & Width with Cut Top-Right Edge */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {INDUSTRIES.slice(0, 6).map((ind) => {
+              const isActive = ind.id === activeSectorId;
+              return (
+                <div
+                  key={ind.id}
+                  onClick={() => setActiveSectorId(ind.id)}
+                  style={{
+                    clipPath: "polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 0 100%)",
+                  }}
+                  className={`p-[1.5px] transition-all duration-300 cursor-pointer group ${isActive
+                    ? "bg-white shadow-2xl translate-y-[-4px]"
+                    : "bg-white/80 hover:bg-white shadow-xl hover:shadow-2xl"
+                    }`}
+                >
+                  <button
+                    type="button"
+                    style={{
+                      clipPath: "polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 0 100%)",
+                    }}
+                    className={`w-full h-full text-left p-7 sm:p-8 min-h-[220px] sm:min-h-[250px] transition-colors duration-200 cursor-pointer flex flex-col justify-between backdrop-blur-md ${isActive
+                      ? "bg-white text-zinc-950"
+                      : "bg-white/90 group-hover:bg-white text-zinc-950"
+                      }`}
+                  >
+                    <div>
+                      <h3 className={`text-base sm:text-lg mb-2.5 tracking-tight text-zinc-950 transition-colors pr-6 ${isActive ? "font-semibold" : "font-medium"
+                        }`}>
+                        {ind.title}
+                      </h3>
+                      <p className="text-xs sm:text-sm font-normal leading-relaxed text-zinc-700">
+                        {ind.description}
+                      </p>
+                    </div>
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* 6. "OUR SOFTWARE POWERS..." STATEMENT SECTION (Pure White Background - Daigo Deploy) */}
+      <section
+        id="software-statement"
+        style={{ backgroundColor: "#ffffff" }}
+        className="relative w-full py-28 sm:py-36 md:py-48 px-6 border-t border-zinc-200 bg-white text-zinc-950 transition-colors"
+      >
+        <div className="max-w-6xl mx-auto text-center">
+          <h2 className="text-3xl sm:text-5xl md:text-6xl lg:text-[4.25rem] xl:text-[4.75rem] font-normal tracking-[-0.035em] leading-[1.12] text-zinc-950">
+            We advance the frontiers of{" "}
+            <span className="text-[#8a8f98] font-normal">applied intelligence</span>
+            <br className="hidden md:inline" /> through forward deployed engineering,
+            <br className="hidden md:inline" /> bringing sophisticated AI capabilities to
+            <br className="hidden md:inline" /> underserved markets across Africa.
+          </h2>
+        </div>
+      </section>
+
+      {/* 6B. "THERE IS SO MUCH LEFT TO BUILD" FIELD DEPLOYMENT SECTION */}
+      <section
+        id="left-to-build"
+        style={{ backgroundColor: "#ffffff" }}
+        className="relative w-full py-16 sm:py-24 lg:py-32 px-6 border-t border-zinc-200 bg-white text-zinc-950 transition-colors"
+      >
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+          {/* Left Column: Field Operations Photo */}
+          <div className="relative overflow-hidden rounded-xs shadow-md">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/fde-model.jpg"
+              alt="Forward Deployed Engineering Model"
+              className="w-full h-auto object-cover block select-none"
+              loading="lazy"
+            />
+          </div>
+
+          {/* Right Column: Mission Callout */}
+          <div className="flex flex-col items-center lg:items-start text-center lg:text-left px-2 sm:px-6 lg:px-10">
+            <span className="text-xs uppercase tracking-[0.2em] text-zinc-500 block mb-3 font-mono">
+              The FDE Model
+            </span>
+
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-normal tracking-tight text-zinc-950 leading-tight mb-5">
+              What is forward deployed engineering?
+            </h2>
+
+            <p className="text-lg sm:text-xl text-zinc-900 font-normal leading-relaxed mb-4">
+              How AI gets into production inside complex organisations.
+            </p>
+
+            <p className="text-sm sm:text-base text-zinc-700 leading-relaxed font-normal max-w-lg">
+              Instead of handing you a generic tool, our engineers join your business and work on one specific problem. We prove the value, then turn what we learn into something that scales across your organisation.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* 7. "BUILT FOR ENTERPRISE AI" */}
+      <section
+        id="hardest-problems"
+        className="relative w-full min-h-[85vh] flex items-center justify-center overflow-hidden border-t border-zinc-200 bg-cover bg-center bg-no-repeat transition-all duration-300"
+        style={{
+          backgroundImage: `url('/built-for-enterprise.jpg')`,
+        }}
+      >
+        {/* Section Content */}
+        <div className="relative z-20 max-w-7xl w-full mx-auto px-6 py-28 sm:py-36 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-start">
+          {/* Left Column: Headline */}
+          <div className="lg:col-span-7">
+            <h2 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-normal tracking-[-0.035em] text-white leading-[1.06] drop-shadow-[0_2px_16px_rgba(0,0,0,0.8)]">
+              Built for
+              <br />
+              Enterprise AI
+            </h2>
+          </div>
+
+          {/* Right Column: Narrative */}
+          <div className="lg:col-span-5 flex flex-col justify-start pt-2 sm:pt-3 max-w-xl">
+            <div className="border-l-2 border-white pl-6 pb-16 sm:pb-24">
+              <p className="text-sm sm:text-base md:text-lg text-white font-semibold leading-relaxed tracking-wide drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
+                Our teams combine deep market and regulatory expertise with forward-deployed engineers placed directly within your operations, ensuring every system remains accurate, reliable, and effective long after deployment.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 7B. "ENGINEERING & TECHNOLOGY" BLOG SECTION */}
+      <section
+        id="engineering-technology"
+        style={{ backgroundColor: "#ffffff" }}
+        className="relative w-full py-20 sm:py-28 px-6 border-t border-zinc-200 bg-white text-zinc-950 transition-colors"
+      >
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <span className="text-xs uppercase tracking-[0.2em] text-zinc-500 block mb-4 font-mono">
+            Our Process
+          </span>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-[3.25rem] font-normal text-zinc-950 tracking-tight mb-12">
+            Complete Deployment Lifecycle
+          </h2>
+
+          {/* 4 Cards Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+            {/* Card 1: Immersion */}
+            <div
+              onMouseEnter={() => setActiveProcessCard(0)}
+              onMouseLeave={() => setActiveProcessCard(null)}
+              onClick={() => setActiveProcessCard(activeProcessCard === 0 ? null : 0)}
+              className="group bg-zinc-100/80 text-zinc-950 border border-zinc-200 p-7 sm:p-8 flex flex-col justify-start min-h-[300px] sm:min-h-[320px] lg:min-h-[340px] rounded-xs cursor-pointer select-none"
+            >
+              <h3 className="text-xl sm:text-2xl lg:text-3xl font-normal text-zinc-950 tracking-tight transition-colors">
+                Immersion
+              </h3>
+              <div className="mt-14 sm:mt-16 lg:mt-20">
+                <p
+                  className={`text-sm sm:text-base font-normal leading-relaxed transform transition-all duration-300 ease-out ${
+                    activeProcessCard === 0
+                      ? "-translate-y-2.5 text-zinc-950 font-medium"
+                      : "translate-y-0 text-zinc-700 group-hover:-translate-y-2.5 group-hover:text-zinc-950 group-hover:font-medium"
+                  }`}
+                >
+                  We study the operation, map the data and decision flows, and define a single high-value problem with measurable success criteria.
+                </p>
+              </div>
+            </div>
+
+            {/* Card 2: Deployment */}
+            <div
+              onMouseEnter={() => setActiveProcessCard(1)}
+              onMouseLeave={() => setActiveProcessCard(null)}
+              onClick={() => setActiveProcessCard(activeProcessCard === 1 ? null : 1)}
+              className="group bg-zinc-100/80 text-zinc-950 border border-zinc-200 p-7 sm:p-8 flex flex-col justify-start min-h-[300px] sm:min-h-[320px] lg:min-h-[340px] rounded-xs cursor-pointer select-none"
+            >
+              <h3 className="text-xl sm:text-2xl lg:text-3xl font-normal text-zinc-950 tracking-tight transition-colors">
+                Deployment
+              </h3>
+              <div className="mt-14 sm:mt-16 lg:mt-20">
+                <p
+                  className={`text-sm sm:text-base font-normal leading-relaxed transform transition-all duration-300 ease-out ${
+                    activeProcessCard === 1
+                      ? "-translate-y-2.5 text-zinc-950 font-medium"
+                      : "translate-y-0 text-zinc-700 group-hover:-translate-y-2.5 group-hover:text-zinc-950 group-hover:font-medium"
+                  }`}
+                >
+                  We build and release a working system inside your environment, integrated with the tools your people already use.
+                </p>
+              </div>
+            </div>
+
+            {/* Card 3: Validation */}
+            <div
+              onMouseEnter={() => setActiveProcessCard(2)}
+              onMouseLeave={() => setActiveProcessCard(null)}
+              onClick={() => setActiveProcessCard(activeProcessCard === 2 ? null : 2)}
+              className="group bg-zinc-100/80 text-zinc-950 border border-zinc-200 p-7 sm:p-8 flex flex-col justify-start min-h-[300px] sm:min-h-[320px] lg:min-h-[340px] rounded-xs cursor-pointer select-none"
+            >
+              <h3 className="text-xl sm:text-2xl lg:text-3xl font-normal text-zinc-950 tracking-tight transition-colors">
+                Validation
+              </h3>
+              <div className="mt-14 sm:mt-16 lg:mt-20">
+                <p
+                  className={`text-sm sm:text-base font-normal leading-relaxed transform transition-all duration-300 ease-out ${
+                    activeProcessCard === 2
+                      ? "-translate-y-2.5 text-zinc-950 font-medium"
+                      : "translate-y-0 text-zinc-700 group-hover:-translate-y-2.5 group-hover:text-zinc-950 group-hover:font-medium"
+                  }`}
+                >
+                  We test accuracy, reliability and business impact against expert-reviewed benchmarks and agreed targets.
+                </p>
+              </div>
+            </div>
+
+            {/* Card 4: Expansion */}
+            <div
+              onMouseEnter={() => setActiveProcessCard(3)}
+              onMouseLeave={() => setActiveProcessCard(null)}
+              onClick={() => setActiveProcessCard(activeProcessCard === 3 ? null : 3)}
+              className="group bg-zinc-100/80 text-zinc-950 border border-zinc-200 p-7 sm:p-8 flex flex-col justify-start min-h-[300px] sm:min-h-[320px] lg:min-h-[340px] rounded-xs cursor-pointer select-none"
+            >
+              <h3 className="text-xl sm:text-2xl lg:text-3xl font-normal text-zinc-950 tracking-tight transition-colors">
+                Expansion
+              </h3>
+              <div className="mt-14 sm:mt-16 lg:mt-20">
+                <p
+                  className={`text-sm sm:text-base font-normal leading-relaxed transform transition-all duration-300 ease-out ${
+                    activeProcessCard === 3
+                      ? "-translate-y-2.5 text-zinc-950 font-medium"
+                      : "translate-y-0 text-zinc-700 group-hover:-translate-y-2.5 group-hover:text-zinc-950 group-hover:font-medium"
+                  }`}
+                >
+                  We harden the system for production, extend it across functions and markets, and transfer capability to your organisation.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Right: Book a Demo Button */}
+          <div className="flex justify-end mt-12 sm:mt-16">
+            <Link
+              href="/demo"
+              className="inline-flex items-center justify-center bg-transparent border border-zinc-950 text-zinc-950 hover:bg-zinc-950 hover:text-white transition-all duration-200 px-8 py-3 text-xs tracking-[0.25em] font-medium uppercase cursor-pointer"
+            >
+              BOOK A DEMO
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* 7C. NEWSROOM / THOUGHT LEADERSHIP & INVESTOR RELATIONS (Before Footer) */}
+      <section
+        id="newsroom"
+        style={{ backgroundColor: "#ffffff" }}
+        className="relative w-full py-20 sm:py-28 px-6 border-t border-zinc-200 bg-white text-zinc-950 transition-colors"
+      >
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 md:auto-rows-fr gap-10 lg:gap-14 items-stretch">
+            {/* Card 1: Thought Leadership */}
+            <div className="group flex flex-col justify-between h-full">
+              <div className="flex-1 flex flex-col">
+                <div
+                  style={{
+                    clipPath: "polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 0 100%)",
+                  }}
+                  className="relative overflow-hidden bg-zinc-100 border border-zinc-200/80 aspect-[480/254] w-full shrink-0"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/thought-leadership.jpg"
+                    alt="Model Context Protocol (MCP) in Retail"
+                    className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
+                    loading="lazy"
+                  />
+                </div>
+
+                <h3 className="flex-1 text-2xl sm:text-3xl lg:text-[2rem] font-normal text-zinc-950 mt-6 mb-8 tracking-tight leading-snug">
+                  Model Context Protocol (MCP) in Retail:
+                  <span className="block text-base sm:text-lg text-zinc-700 font-normal mt-2.5 leading-relaxed">
+                    How structured APIs and MCP influence commerce.
+                  </span>
+                </h3>
+              </div>
+
+              <Link
+                href="/blog"
+                className="mt-auto pt-6 flex items-center justify-between pb-3 border-b border-zinc-200 group-hover:border-zinc-950 transition-colors"
+              >
+                <span className="text-sm font-normal text-zinc-900 group-hover:text-black">
+                  See More
+                </span>
+                <span className="text-sm text-zinc-900 group-hover:text-black group-hover:translate-x-1 transition-all">
+                  &rarr;
+                </span>
+              </Link>
+            </div>
+
+            {/* Card 2: Decomposing Enterprise Workflows */}
+            <div className="group flex flex-col justify-between h-full">
+              <div className="flex-1 flex flex-col">
+                <div
+                  style={{
+                    clipPath: "polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 0 100%)",
+                  }}
+                  className="relative overflow-hidden bg-zinc-950 border border-zinc-200/80 aspect-[480/254] w-full shrink-0"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/investor-relations.jpg"
+                    alt="Decomposing Enterprise Workflows for Benchmark Design"
+                    className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
+                    loading="lazy"
+                  />
+                </div>
+
+                <h3 className="flex-1 text-2xl sm:text-3xl lg:text-[2rem] font-normal text-zinc-950 mt-6 mb-8 tracking-tight leading-snug">
+                  Decomposing Enterprise Workflows for Benchmark Design.
+                  <span className="block text-base sm:text-lg text-zinc-700 font-normal mt-2.5 leading-relaxed">
+                    Mapping functional processes into measurable agent sub-tasks across Augmentation (assisting humans), Automation (replacing manual steps), and Innovation (unlocking new workflows).
+                  </span>
+                </h3>
+              </div>
+
+              <Link
+                href="/blog"
+                className="mt-auto pt-6 flex items-center justify-between pb-3 border-b border-zinc-200 group-hover:border-zinc-950 transition-colors"
+              >
+                <span className="text-sm font-normal text-zinc-900 group-hover:text-black">
+                  See More
+                </span>
+                <span className="text-sm text-zinc-900 group-hover:text-black group-hover:translate-x-1 transition-all">
+                  &rarr;
+                </span>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 8. FOOTER SECTION */}
+      <footer className="relative w-full bg-zinc-100 dark:bg-[#050608] border-t border-zinc-200 dark:border-white/[0.08] text-zinc-600 dark:text-zinc-400 overflow-hidden transition-colors">
+        <div className="max-w-7xl mx-auto px-6 pt-16 pb-16">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-10 items-start pb-16 border-b border-zinc-200 dark:border-white/[0.06]">
+            {/* Contact Information */}
+            <div className="md:col-span-5 space-y-2 text-xs font-mono tracking-wider text-zinc-800 dark:text-zinc-300">
+              <div>
+                <a
+                  href="mailto:HELLO@DAIGODEPLOY.COM"
+                  className="hover:text-black dark:hover:text-white transition-colors block font-semibold"
+                >
+                  HELLO@DAIGODEPLOY.COM
+                </a>
+              </div>
+              <div className="text-zinc-600 dark:text-zinc-400">DOVER KENTON RD, DOVER, DELAWARE 19904, UNITED STATES</div>
+            </div>
+
+            {/* Navigation & Legal Links */}
+            <div className="md:col-span-4 flex flex-col space-y-2 text-xs font-mono tracking-wider">
+              <div className="flex flex-wrap gap-4 pb-2 border-b border-zinc-200 dark:border-white/[0.06] mb-2 font-semibold">
+                <Link href="/industries" className="text-zinc-900 hover:text-black dark:text-zinc-200 dark:hover:text-white transition-colors">
+                  INDUSTRIES
+                </Link>
+                <Link href="/blog" className="text-zinc-900 hover:text-black dark:text-zinc-200 dark:hover:text-white transition-colors">
+                  BLOG
+                </Link>
+                <Link href="/careers" className="text-zinc-900 hover:text-black dark:text-zinc-200 dark:hover:text-white transition-colors">
+                  CAREERS
+                </Link>
+              </div>
+              <Link href="/terms" className="text-zinc-700 hover:text-black dark:text-zinc-400 dark:hover:text-white transition-colors">
+                TERMS OF USE
+              </Link>
+              <Link href="/privacy" className="text-zinc-700 hover:text-black dark:text-zinc-400 dark:hover:text-white transition-colors">
+                PRIVACY POLICY
+              </Link>
+              <Link href="/cookies" className="text-zinc-700 hover:text-black dark:text-zinc-400 dark:hover:text-white transition-colors">
+                COOKIE POLICY
+              </Link>
+            </div>
+
+            {/* Social Links (X, LinkedIn, Instagram in round frames) */}
+            <div className="md:col-span-3 flex md:justify-end items-center gap-3">
+              <a
+                href="https://x.com/daigodeploy"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="X (formerly Twitter)"
+                className="w-12 h-12 rounded-full border border-zinc-300 dark:border-white/20 flex items-center justify-center text-zinc-700 dark:text-zinc-400 hover:border-zinc-950 dark:hover:border-white/50 hover:text-black dark:hover:text-white transition-all hover:scale-105 cursor-pointer"
+              >
+                <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 23.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                </svg>
+              </a>
+              <a
+                href="https://www.linkedin.com/company/daigo-deploy"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="LinkedIn"
+                className="w-12 h-12 rounded-full border border-zinc-300 dark:border-white/20 flex items-center justify-center text-zinc-700 dark:text-zinc-400 hover:border-zinc-950 dark:hover:border-white/50 hover:text-black dark:hover:text-white transition-all hover:scale-105 cursor-pointer"
+              >
+                <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true">
+                  <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 8.76a1.53 1.53 0 1 0 0-3.06 1.53 1.53 0 0 0 0 3.06m1.4 9.74V9.94H5.06v8.56z" />
+                </svg>
+              </a>
+              <a
+                href="https://instagram.com/daigodeploy"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram"
+                className="w-12 h-12 rounded-full border border-zinc-300 dark:border-white/20 flex items-center justify-center text-zinc-700 dark:text-zinc-400 hover:border-zinc-950 dark:hover:border-white/50 hover:text-black dark:hover:text-white transition-all hover:scale-105 cursor-pointer"
+              >
+                <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true">
+                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zm0 10.162a3.999 3.999 0 1 1 0-7.998 3.999 3.999 0 0 1 0 7.998zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z" />
+                </svg>
+              </a>
+            </div>
+          </div>
+
+          {/* Giant Full-Width Typography: Official Logo Mark + "Daigo Deploy" */}
+          <div className="pt-12 pb-6 flex items-center gap-6 sm:gap-10 text-zinc-950 dark:text-zinc-300">
+            <DaigoIcon className="h-10 sm:h-16 md:h-20 lg:h-24 w-auto text-zinc-950 dark:text-zinc-300 shrink-0" />
+            <span className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight select-none">
+              Daigo Deploy
+            </span>
+          </div>
+
+          <div className="pt-4 text-[10px] font-mono tracking-widest text-zinc-500 dark:text-zinc-600">
+            2026 FLOWBOARD TEAM INC. ALL RIGHTS RESERVED.
+          </div>
+        </div>
+      </footer>
+
+
+      {/* Floating Accessibility Widget Button (Bottom Left) */}
+      <div className="fixed bottom-4 left-4 z-40">
+        <button
+          onClick={() => setIsA11yOpen(!isA11yOpen)}
+          className="w-10 h-10 rounded-full bg-[#185adb] hover:bg-[#1447b0] text-white flex items-center justify-center shadow-lg transition-transform hover:scale-105 cursor-pointer"
+          title="Accessibility Preferences"
+          aria-label="Accessibility settings"
+        >
+          <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+            <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9H15V22H13V16H11V22H9V9H3V7H21V9Z" />
+          </svg>
+        </button>
+
+        {isA11yOpen && (
+          <div className="absolute bottom-12 left-0 mb-2 w-64 bg-white dark:bg-[#0d121c] border border-zinc-200 dark:border-white/20 p-4 rounded-lg shadow-2xl text-xs space-y-3 font-mono text-zinc-900 dark:text-zinc-300">
+            <div className="flex justify-between items-center pb-2 border-b border-zinc-200 dark:border-white/10">
+              <span className="font-bold text-zinc-950 dark:text-white">Accessibility</span>
+              <button onClick={() => setIsA11yOpen(false)} className="text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer">&times;</button>
+            </div>
+            <div className="space-y-2">
+              <label className="flex items-center justify-between cursor-pointer">
+                <span>Theme Mode</span>
+                <button
+                  type="button"
+                  onClick={toggleTheme}
+                  className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-white/10 border border-zinc-200 dark:border-white/10 text-[10px] font-semibold"
+                >
+                  {isDark ? "DARK 🌙" : "LIGHT ☀️"}
+                </button>
+              </label>
+              <label className="flex items-center justify-between cursor-pointer">
+                <span>High Contrast</span>
+                <input type="checkbox" className="rounded" defaultChecked />
+              </label>
+              <label className="flex items-center justify-between cursor-pointer">
+                <span>Reduce Motion</span>
+                <input type="checkbox" className="rounded" />
+              </label>
+            </div>
+          </div>
+        )}
+      </div>
+
+
+
+
     </div>
   );
 }
