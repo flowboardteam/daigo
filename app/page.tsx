@@ -172,6 +172,30 @@ export default function Home() {
   const [isA11yOpen, setIsA11yOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeProcessCard, setActiveProcessCard] = useState<number | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Lock scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
+
+  // Handle escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && mobileMenuOpen) {
+        setMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [mobileMenuOpen]);
 
   const toggleTheme = () => {
     const nextTheme = theme === "light" ? "dark" : "light";
@@ -198,10 +222,10 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white text-zinc-950 dark:bg-[#060709] dark:text-[#e6e8eb] flex flex-col font-sans transition-colors duration-200 selection:bg-zinc-200 dark:selection:bg-zinc-700 selection:text-black dark:selection:text-white">
-      {/* 1. TOP ANNOUNCEMENT BAR */}
+      {/* 1. TOP ANNOUNCEMENT BAR (Responsive wrap for mobile screens) */}
       <aside
         aria-label="Announcement"
-        className="w-full bg-zinc-100/80 dark:bg-[#0b0c0e]/80 backdrop-blur-md border-b border-zinc-200/80 dark:border-white/[0.07] px-4 py-2.5 text-center text-xs tracking-wide text-zinc-600 dark:text-zinc-400 flex items-center justify-center gap-2 transition-colors relative z-40"
+        className="w-full bg-zinc-100/80 dark:bg-[#0b0c0e]/80 backdrop-blur-md border-b border-zinc-200/80 dark:border-white/[0.07] px-4 py-2 sm:py-2.5 text-center text-[11px] sm:text-xs leading-relaxed tracking-wide text-zinc-600 dark:text-zinc-400 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 transition-colors relative z-40"
       >
         <span>Flowboard Team launches Daigo Deploy to accelerate AI adoption across African enterprises</span>
         <Link
@@ -219,27 +243,36 @@ export default function Home() {
           : "backdrop-blur-md backdrop-saturate-150 bg-black/40 border-b border-white/15 shadow-[inset_0_-1px_0_0_rgba(255,255,255,0.08)]"
           }`}
       >
-        <div className="max-w-7xl mx-auto px-6 h-18 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 sm:h-18 flex items-center justify-between">
           {/* Logo with official new emblem */}
-          <a
-            href="#"
-            className={`flex items-center gap-3 group cursor-pointer transition-colors ${scrolled ? "text-zinc-950 dark:text-white" : "text-white"
+          <Link
+            href="/"
+            className={`flex items-center gap-2.5 sm:gap-3 group cursor-pointer transition-colors ${scrolled ? "text-zinc-950 dark:text-white" : "text-white"
               }`}
             aria-label="Daigo Deploy home"
           >
             <DaigoIcon
-              className={`h-5 w-auto transition-colors shrink-0 ${scrolled
+              className={`h-4.5 sm:h-5 w-auto transition-colors shrink-0 ${scrolled
                 ? "text-zinc-950 dark:text-white group-hover:text-zinc-600 dark:group-hover:text-zinc-300"
                 : "text-white group-hover:text-zinc-300"
                 }`}
             />
-            <span className="text-xl sm:text-2xl font-bold tracking-tight">
+            <span className="text-lg sm:text-2xl font-bold tracking-tight">
               Daigo Deploy
             </span>
-          </a>
+          </Link>
 
-          {/* Navigation Links */}
-          <nav className="flex items-center gap-6 sm:gap-8">
+          {/* Desktop Navigation Links */}
+          <nav className="hidden md:flex items-center gap-6 sm:gap-8">
+            <Link
+              href="/industries"
+              className={`text-[11px] font-semibold tracking-[0.2em] uppercase cursor-pointer transition-colors ${scrolled
+                ? "text-zinc-800 hover:text-black dark:text-zinc-200 dark:hover:text-white"
+                : "text-white/85 hover:text-white"
+                }`}
+            >
+              Industries
+            </Link>
             <Link
               href="/blog"
               className={`text-[11px] font-semibold tracking-[0.2em] uppercase cursor-pointer transition-colors ${scrolled
@@ -258,23 +291,187 @@ export default function Home() {
             >
               Careers
             </Link>
+            <Link
+              href="/demo"
+              className={`text-[11px] font-semibold tracking-[0.2em] uppercase px-4 py-2 border transition-all ${scrolled
+                ? "border-zinc-950 text-zinc-950 hover:bg-zinc-950 hover:text-white dark:border-white dark:text-white dark:hover:bg-white dark:hover:text-black"
+                : "border-white/80 text-white hover:bg-white hover:text-black"
+                }`}
+            >
+              Book A Demo
+            </Link>
           </nav>
+
+          {/* Mobile Right Controls: Get Started + Hamburger Menu Toggle */}
+          <div className="flex md:hidden items-center gap-2">
+            <Link
+              href="/demo"
+              className={`text-[10px] font-semibold tracking-[0.15em] uppercase px-3 py-1.5 border transition-all ${
+                scrolled
+                  ? "border-zinc-950 text-zinc-950 dark:border-white dark:text-white"
+                  : "border-white text-white bg-white/10"
+              }`}
+            >
+              Demo
+            </Link>
+
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className={`w-10 h-10 flex items-center justify-center rounded-md transition-colors cursor-pointer ${
+                scrolled
+                  ? "text-zinc-950 dark:text-white hover:bg-zinc-100 dark:hover:bg-white/10"
+                  : "text-white hover:bg-white/10"
+              }`}
+              aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={mobileMenuOpen}
+            >
+              {mobileMenuOpen ? (
+                <svg className="w-5 h-5 fill-none stroke-current stroke-2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5 fill-none stroke-current stroke-2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              )}
+            </button>
+          </div>
         </div>
       </header>
+
+      {/* Mobile Navigation Drawer */}
+      {mobileMenuOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Navigation Menu"
+          className="fixed inset-0 z-50 md:hidden bg-white/98 dark:bg-[#060709]/98 backdrop-blur-2xl flex flex-col justify-between p-6 overflow-y-auto animate-in fade-in duration-200"
+        >
+          {/* Header inside drawer */}
+          <div className="flex items-center justify-between pb-6 border-b border-zinc-200 dark:border-white/10">
+            <Link
+              href="/"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-3 text-zinc-950 dark:text-white"
+            >
+              <DaigoIcon className="h-5 w-auto" />
+              <span className="text-xl font-bold tracking-tight">Daigo Deploy</span>
+            </Link>
+
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(false)}
+              className="w-10 h-10 flex items-center justify-center text-zinc-950 dark:text-white hover:bg-zinc-100 dark:hover:bg-white/10 rounded-full transition-colors cursor-pointer"
+              aria-label="Close menu"
+            >
+              <svg className="w-6 h-6 fill-none stroke-current stroke-2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Navigation Links */}
+          <nav className="flex flex-col py-8 space-y-2">
+            <Link
+              href="/"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-between py-3.5 px-3 text-lg font-medium text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-white/5 rounded-lg transition-colors"
+            >
+              <span>Home</span>
+              <span className="text-zinc-400 text-sm">&rarr;</span>
+            </Link>
+
+            <Link
+              href="/industries"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-between py-3.5 px-3 text-lg font-medium text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-white/5 rounded-lg transition-colors"
+            >
+              <span>Industries</span>
+              <span className="text-zinc-400 text-sm">&rarr;</span>
+            </Link>
+
+            <Link
+              href="/blog"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-between py-3.5 px-3 text-lg font-medium text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-white/5 rounded-lg transition-colors"
+            >
+              <span>Blog</span>
+              <span className="text-zinc-400 text-sm">&rarr;</span>
+            </Link>
+
+            <Link
+              href="/careers"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-between py-3.5 px-3 text-lg font-medium text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-white/5 rounded-lg transition-colors"
+            >
+              <span>Careers</span>
+              <span className="text-zinc-400 text-sm">&rarr;</span>
+            </Link>
+
+            <Link
+              href="/documentation"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-between py-3.5 px-3 text-lg font-medium text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-white/5 rounded-lg transition-colors"
+            >
+              <span>The FDE Model</span>
+              <span className="text-zinc-400 text-sm">&rarr;</span>
+            </Link>
+          </nav>
+
+          {/* Drawer Footer */}
+          <div className="pt-6 border-t border-zinc-200 dark:border-white/10 space-y-6">
+            <Link
+              href="/demo"
+              onClick={() => setMobileMenuOpen(false)}
+              className="w-full flex items-center justify-center py-4 bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 text-xs font-semibold tracking-[0.25em] uppercase rounded-none hover:opacity-90 transition-opacity"
+            >
+              Book A Demo
+            </Link>
+
+            <div className="flex items-center justify-between pt-2">
+              <span className="text-xs font-mono text-zinc-500">Theme</span>
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className="px-3 py-1 rounded bg-zinc-100 dark:bg-white/10 border border-zinc-200 dark:border-white/10 text-xs font-semibold text-zinc-950 dark:text-white"
+              >
+                {isDark ? "Dark 🌙" : "Light ☀️"}
+              </button>
+            </div>
+
+            <div className="flex flex-wrap gap-4 text-xs font-mono text-zinc-500">
+              <Link href="/terms" onClick={() => setMobileMenuOpen(false)} className="hover:text-black dark:hover:text-white">
+                Terms
+              </Link>
+              <Link href="/privacy" onClick={() => setMobileMenuOpen(false)} className="hover:text-black dark:hover:text-white">
+                Privacy
+              </Link>
+              <Link href="/cookies" onClick={() => setMobileMenuOpen(false)} className="hover:text-black dark:hover:text-white">
+                Cookies
+              </Link>
+            </div>
+
+            <div className="text-[11px] font-mono text-zinc-400">
+              HELLO@DAIGODEPLOY.COM
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 3. HERO SECTION (With seamless infinite cyclic video 1113.mov extending behind frosted glass header) */}
       <section
         id="hero"
-        className="-mt-[72px] pt-[72px] relative w-full min-h-[96vh] flex items-end justify-center overflow-hidden bg-black transition-colors duration-300 pb-10 sm:pb-14 lg:pb-16"
+        className="-mt-[64px] sm:-mt-[72px] pt-[64px] sm:pt-[72px] relative w-full min-h-[92vh] sm:min-h-[96vh] flex items-end justify-center overflow-hidden bg-black transition-colors duration-300 pb-8 sm:pb-14 lg:pb-16"
       >
         {/* Seamless Infinite Cyclic Video Player (100% Raw Video Quality, Zero Overlays) */}
         <SeamlessHeroVideo />
 
         {/* Hero Content (Positioned down in the lower section with perfectly aligned top edges) */}
-        <div className="relative z-20 max-w-7xl w-full mx-auto px-6 pt-48 sm:pt-60 lg:pt-72 pb-2 sm:pb-4 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-start">
+        <div className="relative z-20 max-w-7xl w-full mx-auto px-4 sm:px-6 pt-28 sm:pt-48 lg:pt-72 pb-2 sm:pb-4 grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-8 items-start">
           {/* Left: Giant Typography */}
           <div className="lg:col-span-7">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-normal tracking-[-0.035em] text-white leading-[1.08] drop-shadow-md">
+            <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-normal tracking-[-0.035em] text-white leading-[1.1] sm:leading-[1.08] drop-shadow-md">
               Intelligence Behind
               <br />
               Every Mission-Critical
@@ -284,17 +481,17 @@ export default function Home() {
           </div>
 
           {/* Right: Mission Statement & CTA Button (Top-aligned with headline) */}
-          <div className="lg:col-span-5 flex flex-col justify-start pt-1.5 sm:pt-2 max-w-xl">
-            <div className="space-y-6 text-white text-sm sm:text-base md:text-lg leading-relaxed font-normal drop-shadow-[0_1px_6px_rgba(0,0,0,0.8)]">
+          <div className="lg:col-span-5 flex flex-col justify-start pt-1 sm:pt-2 max-w-xl">
+            <div className="space-y-4 sm:space-y-6 text-white text-sm sm:text-base md:text-lg leading-relaxed font-normal drop-shadow-[0_1px_6px_rgba(0,0,0,0.8)]">
               <p>
                 We embed engineering teams within your business to solve complex challenges and build AI systems around the way you work.
               </p>
             </div>
 
-            <div className="mt-8">
+            <div className="mt-6 sm:mt-8">
               <Link
                 href="/demo"
-                className="inline-flex items-center justify-center border border-white/60 text-white bg-white/10 hover:bg-white hover:text-black transition-all duration-200 px-8 py-3 text-xs tracking-[0.25em] font-medium uppercase cursor-pointer backdrop-blur-sm shadow-lg"
+                className="w-full sm:w-auto inline-flex items-center justify-center border border-white/60 text-white bg-white/10 hover:bg-white hover:text-black transition-all duration-200 px-8 py-3.5 text-xs tracking-[0.25em] font-medium uppercase cursor-pointer backdrop-blur-sm shadow-lg min-h-[48px]"
               >
                 Get Started
               </Link>
@@ -306,17 +503,17 @@ export default function Home() {
       {/* 4. BACKED BY BANNER & WHAT WE DO SECTION (Pure White Background) */}
       <section
         style={{ backgroundColor: "#ffffff" }}
-        className="relative w-full border-t border-zinc-200 bg-white text-zinc-950 py-20 px-6 transition-colors"
+        className="relative w-full border-t border-zinc-200 bg-white text-zinc-950 py-14 sm:py-20 px-4 sm:px-6 transition-colors"
       >
         <div className="max-w-7xl mx-auto">
           {/* Backed By Credibility Bar */}
-          <div className="pb-16 border-b border-zinc-200 flex flex-col xl:flex-row items-start xl:items-center justify-between gap-8">
+          <div className="pb-12 sm:pb-16 border-b border-zinc-200 flex flex-col xl:flex-row items-start xl:items-center justify-between gap-8">
             <p className="text-sm sm:text-base text-zinc-800 max-w-xl font-normal leading-relaxed">
               Credit analysis, fraud detection, customer servicing, regulatory reporting and document processing, deployed within your security and compliance frameworks.
             </p>
 
-            {/* Investor & Partner Logos */}
-            <div className="flex items-center flex-wrap sm:flex-nowrap gap-6 sm:gap-8 text-zinc-500 font-medium text-xs tracking-wider uppercase py-1 select-none">
+            {/* Investor & Partner Logos - Mobile optimized grid/flex */}
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap lg:flex-nowrap items-center justify-start gap-5 sm:gap-8 text-zinc-500 font-medium text-xs tracking-wider uppercase py-1 select-none w-full xl:w-auto">
               {/* Anthropic */}
               <div className="flex items-center gap-2 hover:text-zinc-950 transition-colors shrink-0" title="Anthropic">
                 <svg viewBox="0 0 24 24" fill="currentColor" className="h-4.5 w-4.5 shrink-0" aria-hidden="true">
@@ -350,7 +547,7 @@ export default function Home() {
               </div>
 
               {/* Pinecone */}
-              <div className="flex items-center gap-2 hover:text-zinc-950 transition-colors shrink-0" title="Pinecone">
+              <div className="flex items-center gap-2 hover:text-zinc-950 transition-colors shrink-0 col-span-2 sm:col-span-1" title="Pinecone">
                 <svg viewBox="0 0 256 288" fill="currentColor" className="h-4.5 w-4.5 shrink-0" aria-hidden="true">
                   <path d="M108.634 254.436c9.08 0 16.44 7.361 16.44 16.442s-7.36 16.44-16.44 16.44s-16.442-7.36-16.442-16.44s7.361-16.442 16.442-16.442m91.216-29.998l16.247 4.814L203.2 272.78a8.47 8.47 0 0 1-8.7 6.046l-3.983-.273l-.098.08l-41.39-2.904l1.152-16.906l27.808 1.887l-18.205-26.262l13.926-9.656l18.229 26.295zm-176.837-30.09l16.903 1.197l-1.98 27.804L64.15 205.12l9.677 13.91l-26.248 18.248l26.792 7.895l-4.79 16.255l-43.732-12.885a8.47 8.47 0 0 1-6.058-8.726zM132.15 170.67l30.508 36.832l-13.75 11.389l-18.156-21.92l-5.886 33.702l-17.587-3.074l5.892-33.755l-24.442 14.412l-9.063-15.383l41.079-24.2a8.93 8.93 0 0 1 11.405 1.997m85.354-24.71l15.239-8.292l22.2 40.805a8.675 8.675 0 0 1-1.926 10.69l-3.141 2.714l-32.05 27.893l-11.386-13.09l21.548-18.747l-32.095-5.781l3.078-17.074l32.073 5.779zM37.782 103.298l11.48 13.008l-21.251 18.743l32.156 5.614l-2.98 17.091l-32.192-5.618l13.827 24.998l-15.18 8.398l-22.558-40.776a8.675 8.675 0 0 1 1.85-10.703zm108.694-13.42l30.404 36.734l-13.753 11.384l-18.152-21.93l-5.886 33.712l-17.587-3.074l5.872-33.624l-24.349 14.274l-9.027-15.403l37.4-21.929l.038-.142l.165.021l3.485-2.032a8.93 8.93 0 0 1 11.39 2.01m39.18-18.065l6.65-16.024l43.012 17.85a8.675 8.675 0 0 1 5.218 9.517l-.716 3.982l-7.345 41.78l-17.086-3.01l4.924-27.968l-28.537 15.772l-8.386-15.188l28.591-15.784zm-81.939-31.577l.74 17.334l-28.414 1.214l21.43 24.49l-13.056 11.424L62.95 70.173l-5.001 28l-17.078-3.054l8.184-45.759a8.674 8.674 0 0 1 8.17-7.139l4.02-.18l.09-.065zm58.121-36.965l30.267 36.965l-13.814 11.31l-17.964-21.943l-6.059 33.668l-17.57-3.162l6.068-33.743l-24.526 14.34l-9.007-15.415L150.428 1.22a8.93 8.93 0 0 1 11.41 2.052" />
                 </svg>
@@ -360,51 +557,51 @@ export default function Home() {
           </div>
 
           {/* Section: What We Do */}
-          <div className="pt-16 grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+          <div className="pt-12 sm:pt-16 grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 items-start">
             <div className="lg:col-span-7">
-              <span className="text-xs uppercase tracking-[0.2em] text-zinc-500 block mb-4 font-mono">
+              <span className="text-xs uppercase tracking-[0.2em] text-zinc-500 block mb-3 sm:mb-4 font-mono">
                 What We Do
               </span>
-              <h2 className="text-4xl sm:text-5xl lg:text-6xl font-normal tracking-tight text-zinc-950 leading-tight">
+              <h2 className="text-3xl sm:text-5xl lg:text-6xl font-normal tracking-tight text-zinc-950 leading-tight">
                 Forward deployed engineering for African enterprises.
               </h2>
             </div>
 
-            <div className="lg:col-span-5 pt-2">
-              <p className="text-base sm:text-lg text-zinc-900 leading-relaxed font-normal border-l-2 border-zinc-900 pl-6">
+            <div className="lg:col-span-5 pt-1 sm:pt-2">
+              <p className="text-base sm:text-lg text-zinc-900 leading-relaxed font-normal border-l-2 border-zinc-900 pl-4 sm:pl-6">
                 Africa&apos;s businesses operate across diverse realities: varied infrastructure, multiple languages, evolving regulatory environments, and fragmented data. Our Forward Deployed Engineers work alongside local teams to understand these complexities and build AI systems designed for their environments. Not adapted as an afterthought, but engineered for the ground realities from day one.
               </p>
             </div>
           </div>
 
-          {/* Forward Deployed Engineers at Work with image background */}
+          {/* Forward Deployed Engineers at Work with image background - Mobile optimized height & padding */}
           <div
-            className="mt-14 relative w-full h-80 sm:h-96 rounded-none overflow-hidden border border-zinc-200 shadow-xl group bg-cover bg-center"
+            className="mt-10 sm:mt-14 relative w-full min-h-[380px] sm:min-h-[360px] lg:h-96 rounded-none overflow-hidden border border-zinc-200 shadow-xl group bg-cover bg-center"
             style={{
               backgroundImage: `url('/engineers-at-work.jpg')`,
             }}
           >
             {/* In-situ field telemetry callout (Styled with transparent glass matching the header) */}
-            <div className="absolute bottom-6 left-6 right-6 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 p-5 sm:p-6 rounded-none backdrop-blur-md backdrop-saturate-150 bg-white/15 border border-white/30 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_8px_24px_rgba(0,0,0,0.15)] transition-all duration-300">
-              <p className="text-sm sm:text-base md:text-lg text-white font-semibold text-left tracking-wide drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] pr-4 max-w-2xl">
+            <div className="absolute bottom-3 sm:bottom-6 left-3 sm:left-6 right-3 sm:right-6 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3 sm:gap-4 p-4 sm:p-6 rounded-none backdrop-blur-md backdrop-saturate-150 bg-white/15 border border-white/30 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_8px_24px_rgba(0,0,0,0.15)] transition-all duration-300">
+              <p className="text-sm sm:text-base md:text-lg text-white font-semibold text-left tracking-wide drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] pr-2 sm:pr-4 max-w-2xl">
                 We take on the complex, high-ambiguity challenges that conventional software cannot solve.
               </p>
-              <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 shrink-0">
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2.5 shrink-0">
                 <div
                   style={{ fontFamily: "'Orbitron', sans-serif" }}
-                  className="px-3.5 py-1.5 rounded-none bg-white/20 border border-white/35 backdrop-blur-sm text-xs sm:text-sm font-bold uppercase tracking-wider text-white whitespace-nowrap drop-shadow-sm"
+                  className="px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-none bg-white/20 border border-white/35 backdrop-blur-sm text-[11px] sm:text-sm font-bold uppercase tracking-wider text-white whitespace-nowrap drop-shadow-sm"
                 >
                   First principles
                 </div>
                 <div
                   style={{ fontFamily: "'Orbitron', sans-serif" }}
-                  className="px-3.5 py-1.5 rounded-none bg-white/20 border border-white/35 backdrop-blur-sm text-xs sm:text-sm font-bold uppercase tracking-wider text-white whitespace-nowrap drop-shadow-sm"
+                  className="px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-none bg-white/20 border border-white/35 backdrop-blur-sm text-[11px] sm:text-sm font-bold uppercase tracking-wider text-white whitespace-nowrap drop-shadow-sm"
                 >
                   Context
                 </div>
                 <div
                   style={{ fontFamily: "'Orbitron', sans-serif" }}
-                  className="px-3.5 py-1.5 rounded-none bg-white/20 border border-white/35 backdrop-blur-sm text-xs sm:text-sm font-bold uppercase tracking-wider text-white whitespace-nowrap drop-shadow-sm"
+                  className="px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-none bg-white/20 border border-white/35 backdrop-blur-sm text-[11px] sm:text-sm font-bold uppercase tracking-wider text-white whitespace-nowrap drop-shadow-sm"
                 >
                   Scale
                 </div>
@@ -417,7 +614,7 @@ export default function Home() {
       {/* 5. "BEYOND OFF-THE-SHELF" INTERACTIVE SECTORS - 100% Original Clear Images & Crisp White Cards */}
       <section
         id="sectors"
-        className="relative w-full py-24 px-6 border-t border-zinc-200 dark:border-white/[0.06] overflow-hidden transition-colors"
+        className="relative w-full py-16 sm:py-24 px-4 sm:px-6 border-t border-zinc-200 dark:border-white/[0.06] overflow-hidden transition-colors"
       >
         {/* Dynamic Industry Background Images (100% Original Quality, Zero Overlays or White Wash) */}
         <div className="absolute inset-0 overflow-hidden">
@@ -437,7 +634,7 @@ export default function Home() {
         </div>
 
         <div className="max-w-7xl mx-auto relative z-20">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-10 gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 sm:mb-10 gap-4">
             <div>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-normal tracking-tight text-white mb-2 drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)]">
                 Beyond Off-the-Shelf.
@@ -455,8 +652,8 @@ export default function Home() {
             </Link>
           </div>
 
-          {/* 6 Industries Interactive Grid (01 to 06) - Restored Length & Width with Cut Top-Right Edge */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* 6 Industries Interactive Grid (01 to 06) - Mobile friendly spacing & touch targets */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
             {INDUSTRIES.slice(0, 6).map((ind) => {
               const isActive = ind.id === activeSectorId;
               return (
@@ -467,7 +664,7 @@ export default function Home() {
                     clipPath: "polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 0 100%)",
                   }}
                   className={`p-[1.5px] transition-all duration-300 cursor-pointer group ${isActive
-                    ? "bg-white shadow-2xl translate-y-[-4px]"
+                    ? "bg-white shadow-2xl translate-y-[-2px] sm:translate-y-[-4px]"
                     : "bg-white/80 hover:bg-white shadow-xl hover:shadow-2xl"
                     }`}
                 >
@@ -476,13 +673,13 @@ export default function Home() {
                     style={{
                       clipPath: "polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 0 100%)",
                     }}
-                    className={`w-full h-full text-left p-7 sm:p-8 min-h-[220px] sm:min-h-[250px] transition-colors duration-200 cursor-pointer flex flex-col justify-between backdrop-blur-md ${isActive
+                    className={`w-full h-full text-left p-6 sm:p-8 min-h-[190px] sm:min-h-[250px] transition-colors duration-200 cursor-pointer flex flex-col justify-between backdrop-blur-md ${isActive
                       ? "bg-white text-zinc-950"
                       : "bg-white/90 group-hover:bg-white text-zinc-950"
                       }`}
                   >
                     <div>
-                      <h3 className={`text-base sm:text-lg mb-2.5 tracking-tight text-zinc-950 transition-colors pr-6 ${isActive ? "font-semibold" : "font-medium"
+                      <h3 className={`text-base sm:text-lg mb-2 tracking-tight text-zinc-950 transition-colors pr-6 ${isActive ? "font-semibold" : "font-medium"
                         }`}>
                         {ind.title}
                       </h3>
@@ -502,10 +699,10 @@ export default function Home() {
       <section
         id="software-statement"
         style={{ backgroundColor: "#ffffff" }}
-        className="relative w-full py-28 sm:py-36 md:py-48 px-6 border-t border-zinc-200 bg-white text-zinc-950 transition-colors"
+        className="relative w-full py-16 sm:py-28 md:py-40 px-4 sm:px-6 border-t border-zinc-200 bg-white text-zinc-950 transition-colors"
       >
         <div className="max-w-6xl mx-auto text-center">
-          <h2 className="text-3xl sm:text-5xl md:text-6xl lg:text-[4.25rem] xl:text-[4.75rem] font-normal tracking-[-0.035em] leading-[1.12] text-zinc-950">
+          <h2 className="text-2xl sm:text-4xl md:text-5xl lg:text-[4.25rem] xl:text-[4.75rem] font-normal tracking-[-0.035em] leading-[1.15] text-zinc-950">
             We advance the frontiers of{" "}
             <span className="text-[#8a8f98] font-normal">applied intelligence</span>
             <br className="hidden md:inline" /> through forward deployed engineering,
@@ -519,9 +716,9 @@ export default function Home() {
       <section
         id="left-to-build"
         style={{ backgroundColor: "#ffffff" }}
-        className="relative w-full py-16 sm:py-24 lg:py-32 px-6 border-t border-zinc-200 bg-white text-zinc-950 transition-colors"
+        className="relative w-full py-14 sm:py-24 lg:py-32 px-4 sm:px-6 border-t border-zinc-200 bg-white text-zinc-950 transition-colors"
       >
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-center">
           {/* Left Column: Field Operations Photo */}
           <div className="relative overflow-hidden rounded-xs shadow-md">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -533,17 +730,17 @@ export default function Home() {
             />
           </div>
 
-          {/* Right Column: Mission Callout */}
-          <div className="flex flex-col items-center lg:items-start text-center lg:text-left px-2 sm:px-6 lg:px-10">
+          {/* Right Column: Mission Callout (Left aligned for comfortable mobile reading) */}
+          <div className="flex flex-col items-start text-left px-0 sm:px-6 lg:px-10">
             <span className="text-xs uppercase tracking-[0.2em] text-zinc-500 block mb-3 font-mono">
               The FDE Model
             </span>
 
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-normal tracking-tight text-zinc-950 leading-tight mb-5">
+            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-normal tracking-tight text-zinc-950 leading-tight mb-4 sm:mb-5">
               What is forward deployed engineering?
             </h2>
 
-            <p className="text-lg sm:text-xl text-zinc-900 font-normal leading-relaxed mb-4">
+            <p className="text-base sm:text-xl text-zinc-900 font-normal leading-relaxed mb-3 sm:mb-4">
               How AI gets into production inside complex organisations.
             </p>
 
@@ -875,9 +1072,9 @@ export default function Home() {
           </div>
 
           {/* Giant Full-Width Typography: Official Logo Mark + "Daigo Deploy" */}
-          <div className="pt-12 pb-6 flex items-center gap-6 sm:gap-10 text-zinc-950 dark:text-zinc-300">
-            <DaigoIcon className="h-10 sm:h-16 md:h-20 lg:h-24 w-auto text-zinc-950 dark:text-zinc-300 shrink-0" />
-            <span className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight select-none">
+          <div className="pt-12 pb-6 flex items-center gap-4 sm:gap-10 text-zinc-950 dark:text-zinc-300">
+            <DaigoIcon className="h-8 sm:h-16 md:h-20 lg:h-24 w-auto text-zinc-950 dark:text-zinc-300 shrink-0" />
+            <span className="text-3xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight select-none truncate sm:overflow-visible">
               Daigo Deploy
             </span>
           </div>
@@ -903,7 +1100,7 @@ export default function Home() {
         </button>
 
         {isA11yOpen && (
-          <div className="absolute bottom-12 left-0 mb-2 w-64 bg-white dark:bg-[#0d121c] border border-zinc-200 dark:border-white/20 p-4 rounded-lg shadow-2xl text-xs space-y-3 font-mono text-zinc-900 dark:text-zinc-300">
+          <div className="absolute bottom-12 left-0 mb-2 w-64 max-w-[calc(100vw-2rem)] bg-white dark:bg-[#0d121c] border border-zinc-200 dark:border-white/20 p-4 rounded-lg shadow-2xl text-xs space-y-3 font-mono text-zinc-900 dark:text-zinc-300">
             <div className="flex justify-between items-center pb-2 border-b border-zinc-200 dark:border-white/10">
               <span className="font-bold text-zinc-950 dark:text-white">Accessibility</span>
               <button onClick={() => setIsA11yOpen(false)} className="text-zinc-400 hover:text-black dark:hover:text-white cursor-pointer">&times;</button>

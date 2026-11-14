@@ -2,21 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { POSTS, getPostById } from "../blog-data";
-
-// Official Daigo Deploy Vector Logo Icon Component
-function DaigoIcon({ className = "w-7 h-5" }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 142 78"
-      fill="currentColor"
-      className={className}
-      aria-hidden="true"
-    >
-      <path d="M 34 42 L 76 42 L 41 77 L 0 77 Z" />
-      <path d="M 3 0 L 98 0 C 105 0 108 2 112 5 L 141 36 L 102 77 L 67 77 L 109 36 C 102 27 94 22 76 22 L 25 22 Z" />
-    </svg>
-  );
-}
+import SubpageHeader, { DaigoIcon } from "../../components/SubpageHeader";
 
 export function generateStaticParams() {
   return POSTS.map((post) => ({
@@ -38,35 +24,11 @@ export default async function BlogPostPage({
 
   return (
     <div className="min-h-screen flex flex-col bg-white text-zinc-950 transition-colors">
-      {/* 1. Header (Clean, minimalist white with logo and navigation) */}
-      <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-zinc-200/80 transition-colors">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          {/* Logo */}
-          <Link
-            href="/"
-            className="flex items-center gap-3.5 group cursor-pointer text-zinc-950"
-            aria-label="Daigo Deploy home"
-          >
-            <DaigoIcon className="h-5 w-auto transition-transform group-hover:scale-105 shrink-0 text-zinc-950" />
-            <span className="text-xl sm:text-2xl font-bold tracking-tight">
-              Daigo Deploy
-            </span>
-          </Link>
-
-          {/* Nav Links */}
-          <nav className="flex items-center gap-6 sm:gap-8">
-            <Link
-              href="/careers"
-              className="text-xs font-semibold tracking-[0.2em] uppercase text-zinc-600 hover:text-black transition-colors"
-            >
-              Careers
-            </Link>
-          </nav>
-        </div>
-      </header>
+      {/* 1. Header with mobile navigation drawer */}
+      <SubpageHeader activePage="blog" />
 
       {/* 2. Article Reading View */}
-      <main className="flex-1 py-12 sm:py-20 px-6">
+      <main className="flex-1 py-10 sm:py-20 px-4 sm:px-6">
         <article className="max-w-3xl mx-auto">
           {/* Title Header */}
           <header className="mb-8 sm:mb-12">
