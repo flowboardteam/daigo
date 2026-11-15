@@ -74,16 +74,6 @@ export default function SubpageHeader({
           {/* Desktop Navigation Links */}
           <nav className="hidden md:flex items-center gap-6 lg:gap-8">
             <Link
-              href="/industries"
-              className={`text-xs font-semibold tracking-[0.2em] uppercase transition-colors ${
-                activePage === "industries"
-                  ? "text-zinc-950 dark:text-white font-bold"
-                  : "text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white"
-              }`}
-            >
-              Industries
-            </Link>
-            <Link
               href="/blog"
               className={`text-xs font-semibold tracking-[0.2em] uppercase transition-colors ${
                 activePage === "blog"
@@ -103,23 +93,10 @@ export default function SubpageHeader({
             >
               Careers
             </Link>
-            <Link
-              href="/demo"
-              className="text-xs font-semibold tracking-[0.2em] uppercase px-4 py-2 border border-zinc-950 dark:border-white text-zinc-950 dark:text-white hover:bg-zinc-950 hover:text-white dark:hover:bg-white dark:hover:text-zinc-950 transition-all"
-            >
-              Book A Demo
-            </Link>
           </nav>
 
-          {/* Mobile Right Controls: Demo CTA button + Hamburger Menu Toggle */}
-          <div className="flex md:hidden items-center gap-2.5">
-            <Link
-              href="/demo"
-              className="text-[10px] font-semibold tracking-[0.15em] uppercase px-3 py-1.5 border border-zinc-950 dark:border-white text-zinc-950 dark:text-white hover:bg-zinc-950 hover:text-white dark:hover:bg-white dark:hover:text-zinc-950 transition-all"
-            >
-              Demo
-            </Link>
-
+          {/* Mobile Right Controls: Hamburger Menu Toggle */}
+          <div className="flex md:hidden items-center">
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -184,15 +161,6 @@ export default function SubpageHeader({
             </Link>
 
             <Link
-              href="/industries"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center justify-between py-3.5 px-3 text-lg font-medium text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-white/5 rounded-lg transition-colors"
-            >
-              <span>Industries</span>
-              <span className="text-zinc-400 text-sm">&rarr;</span>
-            </Link>
-
-            <Link
               href="/blog"
               onClick={() => setMobileMenuOpen(false)}
               className="flex items-center justify-between py-3.5 px-3 text-lg font-medium text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-white/5 rounded-lg transition-colors"
@@ -220,16 +188,8 @@ export default function SubpageHeader({
             </Link>
           </nav>
 
-          {/* Drawer Footer: Primary CTA & Legal */}
-          <div className="pt-6 border-t border-zinc-200 dark:border-white/10 space-y-6">
-            <Link
-              href="/demo"
-              onClick={() => setMobileMenuOpen(false)}
-              className="w-full flex items-center justify-center py-4 bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 text-xs font-semibold tracking-[0.25em] uppercase rounded-none hover:opacity-90 transition-opacity"
-            >
-              Book A Demo
-            </Link>
-
+          {/* Drawer Footer: Legal & Copyright */}
+          <div className="pt-6 border-t border-zinc-200 dark:border-white/10 space-y-4">
             <div className="flex flex-wrap gap-4 text-xs font-mono text-zinc-500">
               <Link href="/terms" onClick={() => setMobileMenuOpen(false)} className="hover:text-black dark:hover:text-white">
                 Terms

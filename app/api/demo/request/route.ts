@@ -22,9 +22,9 @@ export async function POST(request: Request) {
     }
 
     const apiKey = process.env.RESEND_API_KEY || "";
-    const primaryTo = process.env.CAREERS_PRIMARY_EMAIL || "careers@daigodeploy.com";
-    const fallbackTo = process.env.CAREERS_FALLBACK_EMAIL || "georgealeesu6@gmail.com";
-    const fromAddress = process.env.CAREERS_FROM_EMAIL || "Daigo Careers <onboarding@resend.dev>";
+    const primaryTo = process.env.COMMERCIAL_PRIMARY_EMAIL || "commercial@daigodeploy.com";
+    const fallbackTo = process.env.COMMERCIAL_FALLBACK_EMAIL || "georgealeesu6@gmail.com";
+    const fromAddress = process.env.COMMERCIAL_FROM_EMAIL || "Daigo Commercial <onboarding@resend.dev>";
 
     const plainText = `DAIGO DEPLOY — DEMO & GET STARTED INQUIRY
 

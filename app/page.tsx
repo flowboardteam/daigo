@@ -134,8 +134,8 @@ function SeamlessHeroVideo() {
         className={`absolute inset-0 w-full h-full object-cover ${activeSlot === "A" ? "opacity-100 z-10" : "opacity-0 z-0"
           }`}
       >
-        <source src="/1113-mobile.mp4" type="video/mp4" media="(max-width: 768px)" />
-        <source src="/1113.mp4" type="video/mp4" />
+        <source src="/1115-mobile.mp4" type="video/mp4" media="(max-width: 768px)" />
+        <source src="/1115.mp4" type="video/mp4" />
       </video>
 
       {/* Video Slot B - Standby buffer with metadata preload to prevent bandwidth contention */}
@@ -149,8 +149,8 @@ function SeamlessHeroVideo() {
         className={`absolute inset-0 w-full h-full object-cover ${activeSlot === "B" ? "opacity-100 z-10" : "opacity-0 z-0"
           }`}
       >
-        <source src="/1113-mobile.mp4" type="video/mp4" media="(max-width: 768px)" />
-        <source src="/1113.mp4" type="video/mp4" />
+        <source src="/1115-mobile.mp4" type="video/mp4" media="(max-width: 768px)" />
+        <source src="/1115.mp4" type="video/mp4" />
       </video>
     </div>
   );
@@ -283,15 +283,6 @@ export default function Home() {
           {/* Desktop Navigation Links */}
           <nav className="hidden md:flex items-center gap-6 sm:gap-8">
             <Link
-              href="/industries"
-              className={`text-[11px] font-semibold tracking-[0.2em] uppercase cursor-pointer transition-colors ${scrolled
-                ? "text-zinc-800 hover:text-black dark:text-zinc-200 dark:hover:text-white"
-                : "text-white/85 hover:text-white"
-                }`}
-            >
-              Industries
-            </Link>
-            <Link
               href="/blog"
               className={`text-[11px] font-semibold tracking-[0.2em] uppercase cursor-pointer transition-colors ${scrolled
                 ? "text-zinc-800 hover:text-black dark:text-zinc-200 dark:hover:text-white"
@@ -309,30 +300,10 @@ export default function Home() {
             >
               Careers
             </Link>
-            <Link
-              href="/demo"
-              className={`text-[11px] font-semibold tracking-[0.2em] uppercase px-4 py-2 border transition-all ${scrolled
-                ? "border-zinc-950 text-zinc-950 hover:bg-zinc-950 hover:text-white dark:border-white dark:text-white dark:hover:bg-white dark:hover:text-black"
-                : "border-white/80 text-white hover:bg-white hover:text-black"
-                }`}
-            >
-              Book A Demo
-            </Link>
           </nav>
 
-          {/* Mobile Right Controls: Get Started + Hamburger Menu Toggle */}
-          <div className="flex md:hidden items-center gap-2">
-            <Link
-              href="/demo"
-              className={`text-[10px] font-semibold tracking-[0.15em] uppercase px-3 py-1.5 border transition-all ${
-                scrolled
-                  ? "border-zinc-950 text-zinc-950 dark:border-white dark:text-white"
-                  : "border-white text-white bg-white/10"
-              }`}
-            >
-              Demo
-            </Link>
-
+          {/* Mobile Right Controls: Hamburger Menu Toggle */}
+          <div className="flex md:hidden items-center">
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -401,15 +372,6 @@ export default function Home() {
             </Link>
 
             <Link
-              href="/industries"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center justify-between py-3.5 px-3 text-lg font-medium text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-white/5 rounded-lg transition-colors"
-            >
-              <span>Industries</span>
-              <span className="text-zinc-400 text-sm">&rarr;</span>
-            </Link>
-
-            <Link
               href="/blog"
               onClick={() => setMobileMenuOpen(false)}
               className="flex items-center justify-between py-3.5 px-3 text-lg font-medium text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-white/5 rounded-lg transition-colors"
@@ -439,14 +401,6 @@ export default function Home() {
 
           {/* Drawer Footer */}
           <div className="pt-6 border-t border-zinc-200 dark:border-white/10 space-y-6">
-            <Link
-              href="/demo"
-              onClick={() => setMobileMenuOpen(false)}
-              className="w-full flex items-center justify-center py-4 bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 text-xs font-semibold tracking-[0.25em] uppercase rounded-none hover:opacity-90 transition-opacity"
-            >
-              Book A Demo
-            </Link>
-
             <div className="flex items-center justify-between pt-2">
               <span className="text-xs font-mono text-zinc-500">Theme</span>
               <button
