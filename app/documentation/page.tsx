@@ -37,6 +37,7 @@ export default function DocumentationPage() {
                 alt="The Forward Deployed Engineer (FDE) Model"
                 className="w-full h-full object-cover"
                 loading="eager"
+                decoding="async"
               />
             </picture>
           </div>

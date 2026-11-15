@@ -59,6 +59,7 @@ export default async function BlogPostPage({
                 alt={post.title}
                 className="w-full h-full object-cover"
                 loading="eager"
+                decoding="async"
               />
             </picture>
             </div>

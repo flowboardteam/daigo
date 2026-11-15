@@ -129,7 +129,7 @@ function SeamlessHeroVideo() {
         loop
         muted
         playsInline
-        preload="auto"
+        preload="metadata"
         poster="/1115-poster.webp"
         style={{ transition: "opacity 500ms ease-in-out" }}
         className={`absolute inset-0 w-full h-full object-cover ${activeSlot === "A" ? "opacity-100 z-10" : "opacity-0 z-0"
@@ -213,6 +213,7 @@ const PROCESS_STEPS = [
 export default function Home() {
   const theme = useSyncExternalStore(themeSubscribe, getThemeSnapshot, getThemeServerSnapshot);
   const [activeSectorId, setActiveSectorId] = useState<string>("energy");
+  const [loadedSectors, setLoadedSectors] = useState<string[]>(["energy"]);
   const [isA11yOpen, setIsA11yOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeProcessCard, setActiveProcessCard] = useState<number | null>(null);
@@ -339,13 +340,12 @@ export default function Home() {
     };
   }, [activeProcessStep]);
 
-  // Preload all 6 sector WebP images on mount for instant zero-flicker transitions
+  // On-demand preloading of active sector image to save initial bandwidth
   useEffect(() => {
-    Object.keys(SECTOR_BACKGROUNDS).forEach((key) => {
-      const img = new window.Image();
-      img.src = `/industries/${key}.webp`;
-    });
-  }, []);
+    setLoadedSectors((prev) => (prev.includes(activeSectorId) ? prev : [...prev, activeSectorId]));
+    const img = new window.Image();
+    img.src = `/industries/${activeSectorId}.webp`;
+  }, [activeSectorId]);
 
   // Lock scroll when mobile menu is open
   useEffect(() => {
@@ -702,12 +702,18 @@ export default function Home() {
           </div>
 
           {/* Forward Deployed Engineers at Work with image background - Mobile optimized height & padding */}
-          <div
-            className="mt-10 sm:mt-14 relative w-full min-h-[380px] sm:min-h-[360px] lg:h-96 rounded-none overflow-hidden border border-zinc-200 shadow-xl group bg-cover bg-center"
-            style={{
-              backgroundImage: `url('/engineers-at-work.webp'), url('/engineers-at-work.jpg')`,
-            }}
-          >
+          <div className="mt-10 sm:mt-14 relative w-full min-h-[380px] sm:min-h-[360px] lg:h-96 rounded-none overflow-hidden border border-zinc-200 shadow-xl group bg-zinc-950">
+            <picture className="absolute inset-0 w-full h-full -z-0">
+              <source srcSet="/engineers-at-work.webp" type="image/webp" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/engineers-at-work.jpg"
+                alt="Forward Deployed Engineers at Work"
+                className="w-full h-full object-cover select-none"
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
             {/* In-situ field telemetry callout (Styled with transparent glass matching the header) */}
             <div className="absolute bottom-3 sm:bottom-6 left-3 sm:left-6 right-3 sm:right-6 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3 sm:gap-4 p-4 sm:p-6 rounded-none backdrop-blur-md backdrop-saturate-150 bg-white/15 border border-white/30 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0_8px_24px_rgba(0,0,0,0.15)] transition-all duration-300">
               <p className="text-sm sm:text-base md:text-lg text-white font-semibold text-left tracking-wide drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] pr-2 sm:pr-4 max-w-2xl">
@@ -747,6 +753,7 @@ export default function Home() {
         <div className="absolute inset-0 overflow-hidden bg-zinc-950">
           {Object.entries(SECTOR_BACKGROUNDS).map(([sectorKey, imgUrl]) => {
             const isCurrent = sectorKey === activeSectorId;
+            const isLoaded = loadedSectors.includes(sectorKey) || isCurrent;
             return (
               <div
                 key={sectorKey}
@@ -755,9 +762,13 @@ export default function Home() {
                     ? "opacity-100 z-10 scale-100"
                     : "opacity-0 pointer-events-none z-0 scale-[1.02]"
                 }`}
-                style={{
-                  backgroundImage: `url('/industries/${sectorKey}.webp'), url('${imgUrl}')`,
-                }}
+                style={
+                  isLoaded
+                    ? {
+                        backgroundImage: `url('/industries/${sectorKey}.webp'), url('${imgUrl}')`,
+                      }
+                    : undefined
+                }
               />
             );
           })}
@@ -941,6 +952,7 @@ export default function Home() {
                 alt="Forward Deployed Engineering Model"
                 className="w-full h-auto object-cover block select-none"
                 loading="lazy"
+                decoding="async"
               />
             </picture>
           </div>
@@ -969,11 +981,19 @@ export default function Home() {
       {/* 7. "BUILT FOR ENTERPRISE AI" */}
       <section
         id="hardest-problems"
-        className="relative w-full min-h-[85vh] flex items-center justify-center overflow-hidden border-t border-zinc-200 bg-cover bg-center bg-no-repeat transition-all duration-300"
-        style={{
-          backgroundImage: `url('/built-for-enterprise.webp'), url('/built-for-enterprise.jpg')`,
-        }}
+        className="relative w-full min-h-[85vh] flex items-center justify-center overflow-hidden border-t border-zinc-200 bg-zinc-950 transition-all duration-300"
       >
+        <picture className="absolute inset-0 w-full h-full -z-0">
+          <source srcSet="/built-for-enterprise.webp" type="image/webp" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/built-for-enterprise.jpg"
+            alt="Built for Enterprise AI"
+            className="w-full h-full object-cover select-none"
+            loading="lazy"
+            decoding="async"
+          />
+        </picture>
         {/* Section Content */}
         <div className="relative z-20 max-w-7xl w-full mx-auto px-6 py-28 sm:py-36 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-start">
           {/* Left Column: Headline */}
@@ -1137,6 +1157,7 @@ export default function Home() {
                       alt="Model Context Protocol (MCP) in Retail"
                       className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
                       loading="lazy"
+                      decoding="async"
                     />
                   </picture>
                 </div>
@@ -1179,6 +1200,7 @@ export default function Home() {
                       alt="Decomposing Enterprise Workflows for Benchmark Design"
                       className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
                       loading="lazy"
+                      decoding="async"
                     />
                   </picture>
                 </div>
