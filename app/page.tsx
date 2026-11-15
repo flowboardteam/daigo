@@ -175,6 +175,41 @@ const getThemeSnapshot = (): "light" | "dark" => {
 
 const getThemeServerSnapshot = (): "light" | "dark" => "light";
 
+const PROCESS_STEPS = [
+  {
+    num: "01",
+    phase: "Phase 01 // Weeks 1–2",
+    title: "Immersion",
+    description: "We study the operation, map the data and decision flows, and define a single high-value problem with measurable success criteria.",
+    deliverable: "Problem Definition & Architecture Blueprint",
+    impact: "Measurable success criteria & ROI baseline",
+  },
+  {
+    num: "02",
+    phase: "Phase 02 // Weeks 3–6",
+    title: "Deployment",
+    description: "We build and release a working system inside your environment, integrated with the tools your people already use.",
+    deliverable: "Live Integrated Production System",
+    impact: "Zero-disruption integration with internal tooling",
+  },
+  {
+    num: "03",
+    phase: "Phase 03 // Weeks 7–8",
+    title: "Validation",
+    description: "We test accuracy, reliability and business impact against expert-reviewed benchmarks and agreed targets.",
+    deliverable: "Audited ROI & Benchmark Assessment",
+    impact: "Target accuracy and SLA compliance verified",
+  },
+  {
+    num: "04",
+    phase: "Phase 04 // Ongoing",
+    title: "Expansion",
+    description: "We harden the system for production, extend it across functions and markets, and transfer capability to your organisation.",
+    deliverable: "Scale Architecture & Capability Transfer",
+    impact: "Full internal autonomy & cross-market deployment",
+  },
+];
+
 export default function Home() {
   const theme = useSyncExternalStore(themeSubscribe, getThemeSnapshot, getThemeServerSnapshot);
   const [activeSectorId, setActiveSectorId] = useState<string>("energy");
@@ -182,7 +217,128 @@ export default function Home() {
   const [isA11yOpen, setIsA11yOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeProcessCard, setActiveProcessCard] = useState<number | null>(null);
+  const [activeProcessStep, setActiveProcessStep] = useState<number>(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const industryCarouselRef = useRef<HTMLDivElement>(null);
+  const processCarouselRef = useRef<HTMLDivElement>(null);
+
+  const activeIndustryIndex = Math.max(
+    0,
+    INDUSTRIES.slice(0, 6).findIndex((i) => i.id === activeSectorId)
+  );
+
+  const scrollToIndustry = (index: number) => {
+    if (!industryCarouselRef.current) return;
+    const track = industryCarouselRef.current;
+    const clamped = Math.max(0, Math.min(5, index));
+    const targetItem = INDUSTRIES[clamped];
+    if (targetItem) {
+      setActiveSectorId(targetItem.id);
+    }
+    const slides = track.querySelectorAll<HTMLElement>("[data-slide-index]");
+    const slide = slides[clamped];
+    if (slide) {
+      const scrollTarget = slide.offsetLeft - (track.clientWidth - slide.clientWidth) / 2;
+      track.scrollTo({ left: scrollTarget, behavior: "smooth" });
+    }
+  };
+
+  const handleIndustryScroll = () => {
+    if (!industryCarouselRef.current) return;
+    const track = industryCarouselRef.current;
+    const slides = track.querySelectorAll<HTMLElement>("[data-slide-index]");
+    if (!slides.length) return;
+    const trackCenter = track.scrollLeft + track.clientWidth / 2;
+    let closestIndex = 0;
+    let minDistance = Infinity;
+
+    slides.forEach((slide, idx) => {
+      const slideCenter = slide.offsetLeft + slide.clientWidth / 2;
+      const dist = Math.abs(trackCenter - slideCenter);
+      if (dist < minDistance) {
+        minDistance = dist;
+        closestIndex = idx;
+      }
+    });
+
+    const targetItem = INDUSTRIES[closestIndex];
+    if (targetItem && targetItem.id !== activeSectorId) {
+      setActiveSectorId(targetItem.id);
+    }
+  };
+
+  const scrollToProcess = (index: number) => {
+    if (!processCarouselRef.current) return;
+    const track = processCarouselRef.current;
+    const clamped = Math.max(0, Math.min(PROCESS_STEPS.length - 1, index));
+    setActiveProcessStep(clamped);
+    const slides = track.querySelectorAll<HTMLElement>("[data-process-index]");
+    const slide = slides[clamped];
+    if (slide) {
+      const scrollTarget = slide.offsetLeft - (track.clientWidth - slide.clientWidth) / 2;
+      track.scrollTo({ left: scrollTarget, behavior: "smooth" });
+    }
+  };
+
+  const handleProcessScroll = () => {
+    if (!processCarouselRef.current) return;
+    const track = processCarouselRef.current;
+    const slides = track.querySelectorAll<HTMLElement>("[data-process-index]");
+    if (!slides.length) return;
+    const trackCenter = track.scrollLeft + track.clientWidth / 2;
+    let closestIndex = 0;
+    let minDistance = Infinity;
+
+    slides.forEach((slide, idx) => {
+      const slideCenter = slide.offsetLeft + slide.clientWidth / 2;
+      const dist = Math.abs(trackCenter - slideCenter);
+      if (dist < minDistance) {
+        minDistance = dist;
+        closestIndex = idx;
+      }
+    });
+
+    if (closestIndex !== activeProcessStep) {
+      setActiveProcessStep(closestIndex);
+    }
+  };
+
+  useEffect(() => {
+    const indTrack = industryCarouselRef.current;
+    if (!indTrack) return;
+    let animId: number | null = null;
+    const onScroll = () => {
+      if (animId) return;
+      animId = requestAnimationFrame(() => {
+        handleIndustryScroll();
+        animId = null;
+      });
+    };
+    indTrack.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      indTrack.removeEventListener("scroll", onScroll);
+      if (animId) cancelAnimationFrame(animId);
+    };
+  }, [activeSectorId]);
+
+  useEffect(() => {
+    const procTrack = processCarouselRef.current;
+    if (!procTrack) return;
+    let animId: number | null = null;
+    const onScroll = () => {
+      if (animId) return;
+      animId = requestAnimationFrame(() => {
+        handleProcessScroll();
+        animId = null;
+      });
+    };
+    procTrack.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      procTrack.removeEventListener("scroll", onScroll);
+      if (animId) cancelAnimationFrame(animId);
+    };
+  }, [activeProcessStep]);
 
   // Lazy-load sector background images upon hover or selection
   useEffect(() => {
@@ -629,8 +785,8 @@ export default function Home() {
             </Link>
           </div>
 
-          {/* 6 Industries Interactive Grid (01 to 06) - Mobile friendly spacing & touch targets */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+          {/* Desktop: 6 Industries Interactive Grid (01 to 06) */}
+          <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
             {INDUSTRIES.slice(0, 6).map((ind) => {
               const isActive = ind.id === activeSectorId;
               return (
@@ -668,6 +824,153 @@ export default function Home() {
                 </div>
               );
             })}
+          </div>
+
+          {/* Mobile: Swipeable Industry Carousel with live dynamic background sync */}
+          <div
+            className="md:hidden"
+            role="region"
+            aria-roledescription="carousel"
+            aria-label="Industries carousel"
+          >
+            {/* Top Carousel Status & Arrows */}
+            <div className="flex items-center justify-between mb-3 px-1">
+              <span className="text-[11px] font-mono uppercase tracking-widest text-white/90 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                Sector {INDUSTRIES.slice(0, 6)[activeIndustryIndex]?.num || "01"} of 06
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  aria-label="Previous industry"
+                  onClick={() => scrollToIndustry(activeIndustryIndex - 1)}
+                  disabled={activeIndustryIndex === 0}
+                  className="w-8 h-8 rounded-full bg-black/50 border border-white/20 backdrop-blur-md flex items-center justify-center text-white disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-all cursor-pointer"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  aria-label="Next industry"
+                  onClick={() => scrollToIndustry(activeIndustryIndex + 1)}
+                  disabled={activeIndustryIndex === 5}
+                  className="w-8 h-8 rounded-full bg-black/50 border border-white/20 backdrop-blur-md flex items-center justify-center text-white disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-all cursor-pointer"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Horizontal Snap Track */}
+            <div
+              ref={industryCarouselRef}
+              className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar gap-3.5 pb-4 pt-1 -mx-4 px-4 touch-pan-x"
+              style={{ WebkitOverflowScrolling: "touch" }}
+            >
+              {INDUSTRIES.slice(0, 6).map((ind, idx) => {
+                const isActive = ind.id === activeSectorId;
+                return (
+                  <div
+                    key={ind.id}
+                    data-slide-index={idx}
+                    role="group"
+                    aria-roledescription="slide"
+                    aria-label={`${idx + 1} of 6: ${ind.title}`}
+                    onClick={() => scrollToIndustry(idx)}
+                    style={{
+                      clipPath: "polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%)",
+                    }}
+                    className={`w-[85vw] max-w-[325px] flex-shrink-0 snap-center p-[1.5px] transition-all duration-300 cursor-pointer select-none ${
+                      isActive
+                        ? "bg-white shadow-[0_16px_36px_rgba(0,0,0,0.7)] scale-[1.01]"
+                        : "bg-white/70 shadow-lg opacity-85 hover:opacity-100"
+                    }`}
+                  >
+                    <div
+                      style={{
+                        clipPath: "polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%)",
+                      }}
+                      className="w-full h-full text-left p-5 sm:p-6 min-h-[275px] bg-white/95 backdrop-blur-md flex flex-col justify-between"
+                    >
+                      <div>
+                        {/* Header Badge */}
+                        <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-zinc-100">
+                          <span className="text-[11px] font-mono font-semibold text-zinc-500 uppercase tracking-widest">
+                            {ind.num} // {ind.id.toUpperCase()}
+                          </span>
+                          {ind.metrics && (
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded-xs bg-zinc-100 text-zinc-700 border border-zinc-200 truncate max-w-[160px]">
+                              {ind.metrics}
+                            </span>
+                          )}
+                        </div>
+
+                        <h3 className="text-lg font-medium tracking-tight text-zinc-950 mb-2">
+                          {ind.title}
+                        </h3>
+
+                        <p className="text-xs text-zinc-600 leading-relaxed font-normal">
+                          {ind.description}
+                        </p>
+                      </div>
+
+                      {/* Capabilities pills + CTA */}
+                      <div className="pt-3.5 mt-2 border-t border-zinc-100 flex items-center justify-between">
+                        <div className="flex flex-wrap gap-1">
+                          {ind.capabilities?.slice(0, 2).map((cap, cIdx) => (
+                            <span
+                              key={cIdx}
+                              className="text-[10px] font-mono text-zinc-500 bg-zinc-50 px-1.5 py-0.5 rounded-xs border border-zinc-200"
+                            >
+                              {cap}
+                            </span>
+                          ))}
+                        </div>
+                        <span className="text-xs font-semibold text-zinc-900 flex items-center gap-1 shrink-0 ml-2">
+                          View &rarr;
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Bottom Dots Navigation & Swipe Hint */}
+            <div className="flex items-center justify-between mt-2.5 px-1">
+              <div className="flex items-center gap-1.5">
+                {INDUSTRIES.slice(0, 6).map((ind, idx) => {
+                  const isActive = idx === activeIndustryIndex;
+                  return (
+                    <button
+                      key={ind.id}
+                      type="button"
+                      aria-label={`Go to industry ${idx + 1}: ${ind.title}`}
+                      aria-current={isActive ? "true" : undefined}
+                      onClick={() => scrollToIndustry(idx)}
+                      className={`h-1.5 transition-all duration-300 rounded-full cursor-pointer ${
+                        isActive
+                          ? "w-7 bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]"
+                          : "w-2 bg-white/40 hover:bg-white/70"
+                      }`}
+                    />
+                  );
+                })}
+              </div>
+
+              <span className="text-[11px] font-mono text-white/80 drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] flex items-center gap-1">
+                <span>&larr;</span> Swipe to change sector <span>&rarr;</span>
+              </span>
+            </div>
+
+            {/* Visually hidden polite status for screen readers */}
+            <p className="sr-only" role="status" aria-live="polite">
+              Showing industry {activeIndustryIndex + 1} of 6: {INDUSTRIES[activeIndustryIndex]?.title}
+            </p>
           </div>
         </div>
       </section>
@@ -776,99 +1079,218 @@ export default function Home() {
             Complete Deployment Lifecycle
           </h2>
 
-          {/* 4 Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-            {/* Card 1: Immersion */}
+          {/* Desktop 4 Cards Grid */}
+          <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+            {PROCESS_STEPS.map((step, idx) => (
+              <div
+                key={step.num}
+                onMouseEnter={() => setActiveProcessCard(idx)}
+                onMouseLeave={() => setActiveProcessCard(null)}
+                onClick={() => setActiveProcessCard(activeProcessCard === idx ? null : idx)}
+                className="group bg-zinc-100/80 text-zinc-950 border border-zinc-200 p-7 sm:p-8 flex flex-col justify-between min-h-[320px] lg:min-h-[350px] rounded-xs cursor-pointer select-none transition-all duration-300 hover:shadow-lg hover:border-zinc-400"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-xs font-mono font-semibold text-zinc-500 uppercase tracking-widest">{step.num}</span>
+                    <span className="text-[10px] font-mono text-zinc-600 bg-zinc-200/80 px-2 py-0.5 rounded-xs">
+                      {step.phase.split("//")[1]?.trim()}
+                    </span>
+                  </div>
+                  <h3 className="text-xl sm:text-2xl lg:text-3xl font-normal text-zinc-950 tracking-tight transition-colors">
+                    {step.title}
+                  </h3>
+                  <p
+                    className={`text-sm sm:text-base font-normal leading-relaxed mt-6 transform transition-all duration-300 ease-out ${
+                      activeProcessCard === idx
+                        ? "-translate-y-1.5 text-zinc-950 font-medium"
+                        : "translate-y-0 text-zinc-700 group-hover:-translate-y-1.5 group-hover:text-zinc-950 group-hover:font-medium"
+                    }`}
+                  >
+                    {step.description}
+                  </p>
+                </div>
+                <div className="pt-4 border-t border-zinc-200/80 mt-6">
+                  <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block mb-1">
+                    Deliverable
+                  </span>
+                  <span className="text-xs font-semibold text-zinc-900 block truncate">
+                    {step.deliverable}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Mobile Swipeable Step Flow Carousel */}
+          <div
+            className="md:hidden"
+            role="region"
+            aria-roledescription="carousel"
+            aria-label="Our Process Deployment Lifecycle"
+          >
+            {/* Top Interactive Phase Tabs */}
+            <div className="flex overflow-x-auto no-scrollbar gap-2 pb-3 mb-3 -mx-1 px-1">
+              {PROCESS_STEPS.map((step, idx) => {
+                const isActive = idx === activeProcessStep;
+                return (
+                  <button
+                    key={step.num}
+                    type="button"
+                    onClick={() => scrollToProcess(idx)}
+                    className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-mono tracking-wider uppercase whitespace-nowrap rounded-sm transition-all cursor-pointer ${
+                      isActive
+                        ? "bg-zinc-950 text-white font-semibold shadow-sm"
+                        : "bg-zinc-100 text-zinc-600 hover:text-zinc-950 hover:bg-zinc-200/80"
+                    }`}
+                  >
+                    <span className="opacity-60">{step.num}</span>
+                    <span>{step.title}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Stepper Progress Bar */}
+            <div className="relative w-full h-1 bg-zinc-200 rounded-full mb-4 overflow-hidden">
+              <div
+                className="absolute top-0 left-0 h-full bg-zinc-950 transition-all duration-300 ease-out"
+                style={{ width: `${((activeProcessStep + 1) / PROCESS_STEPS.length) * 100}%` }}
+              />
+            </div>
+
+            {/* Step Cards Horizontal Snap Track */}
             <div
-              onMouseEnter={() => setActiveProcessCard(0)}
-              onMouseLeave={() => setActiveProcessCard(null)}
-              onClick={() => setActiveProcessCard(activeProcessCard === 0 ? null : 0)}
-              className="group bg-zinc-100/80 text-zinc-950 border border-zinc-200 p-7 sm:p-8 flex flex-col justify-start min-h-[300px] sm:min-h-[320px] lg:min-h-[340px] rounded-xs cursor-pointer select-none"
+              ref={processCarouselRef}
+              className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar gap-3.5 pb-4 pt-1 -mx-4 px-4 touch-pan-x"
+              style={{ WebkitOverflowScrolling: "touch" }}
             >
-              <h3 className="text-xl sm:text-2xl lg:text-3xl font-normal text-zinc-950 tracking-tight transition-colors">
-                Immersion
-              </h3>
-              <div className="mt-14 sm:mt-16 lg:mt-20">
-                <p
-                  className={`text-sm sm:text-base font-normal leading-relaxed transform transition-all duration-300 ease-out ${
-                    activeProcessCard === 0
-                      ? "-translate-y-2.5 text-zinc-950 font-medium"
-                      : "translate-y-0 text-zinc-700 group-hover:-translate-y-2.5 group-hover:text-zinc-950 group-hover:font-medium"
-                  }`}
+              {PROCESS_STEPS.map((step, idx) => {
+                const isActive = idx === activeProcessStep;
+                const nextStep = PROCESS_STEPS[idx + 1];
+                return (
+                  <div
+                    key={step.num}
+                    data-process-index={idx}
+                    role="group"
+                    aria-roledescription="slide"
+                    aria-label={`Step ${idx + 1} of 4: ${step.title}`}
+                    className={`w-[85vw] max-w-[335px] flex-shrink-0 snap-center bg-zinc-50/95 border p-5 sm:p-6 flex flex-col justify-between min-h-[360px] rounded-xs shadow-sm transition-all duration-300 ${
+                      isActive ? "border-zinc-950 shadow-md ring-1 ring-zinc-950/10" : "border-zinc-200"
+                    }`}
+                  >
+                    <div>
+                      {/* Step Header */}
+                      <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-zinc-200/80">
+                        <span className="text-[11px] font-mono font-semibold text-zinc-950 uppercase tracking-widest">
+                          STEP {step.num} OF 04
+                        </span>
+                        <span className="text-[10px] font-mono text-zinc-600 bg-zinc-200/80 px-2 py-0.5 rounded-xs">
+                          {step.phase.split("//")[1]?.trim() || "Phase"}
+                        </span>
+                      </div>
+
+                      {/* Step Title */}
+                      <h3 className="text-2xl font-normal text-zinc-950 tracking-tight mb-2.5">
+                        {step.title}
+                      </h3>
+
+                      {/* Step Description */}
+                      <p className="text-xs sm:text-sm text-zinc-700 leading-relaxed font-normal">
+                        {step.description}
+                      </p>
+
+                      {/* Key Deliverable Box */}
+                      <div className="bg-white border border-zinc-200/80 p-3 rounded-xs mt-4 shadow-xs">
+                        <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block mb-0.5">
+                          Key Deliverable
+                        </span>
+                        <p className="text-xs font-semibold text-zinc-950">
+                          {step.deliverable}
+                        </p>
+                        <p className="text-[11px] text-zinc-600 mt-0.5">
+                          {step.impact}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Bottom Step Advancement Action */}
+                    <div className="pt-4 mt-3 border-t border-zinc-200/70">
+                      {nextStep ? (
+                        <button
+                          type="button"
+                          onClick={() => scrollToProcess(idx + 1)}
+                          className="w-full flex items-center justify-between text-xs font-semibold uppercase tracking-wider py-2.5 px-3.5 bg-zinc-950 text-white hover:bg-black active:scale-[0.99] transition-all cursor-pointer"
+                        >
+                          <span>Next: {nextStep.title}</span>
+                          <span>&rarr;</span>
+                        </button>
+                      ) : (
+                        <Link
+                          href="/demo"
+                          className="w-full flex items-center justify-between text-xs font-semibold uppercase tracking-wider py-2.5 px-3.5 bg-zinc-950 text-white hover:bg-black active:scale-[0.99] transition-all cursor-pointer"
+                        >
+                          <span>Book A Demo</span>
+                          <span>&rarr;</span>
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Bottom Controls with Chevrons and Step Dots */}
+            <div className="flex items-center justify-between mt-2.5 px-1">
+              {/* Dots */}
+              <div className="flex items-center gap-1.5">
+                {PROCESS_STEPS.map((step, idx) => {
+                  const isActive = idx === activeProcessStep;
+                  return (
+                    <button
+                      key={step.num}
+                      type="button"
+                      aria-label={`Go to step ${idx + 1}: ${step.title}`}
+                      aria-current={isActive ? "true" : undefined}
+                      onClick={() => scrollToProcess(idx)}
+                      className={`h-1.5 transition-all duration-300 rounded-full cursor-pointer ${
+                        isActive ? "w-7 bg-zinc-950" : "w-2 bg-zinc-300 hover:bg-zinc-400"
+                      }`}
+                    />
+                  );
+                })}
+              </div>
+
+              {/* Prev/Next Buttons */}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  aria-label="Previous step"
+                  onClick={() => scrollToProcess(activeProcessStep - 1)}
+                  disabled={activeProcessStep === 0}
+                  className="w-8 h-8 rounded-full border border-zinc-300 bg-white flex items-center justify-center text-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-all cursor-pointer"
                 >
-                  We study the operation, map the data and decision flows, and define a single high-value problem with measurable success criteria.
-                </p>
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  aria-label="Next step"
+                  onClick={() => scrollToProcess(activeProcessStep + 1)}
+                  disabled={activeProcessStep === PROCESS_STEPS.length - 1}
+                  className="w-8 h-8 rounded-full border border-zinc-300 bg-white flex items-center justify-center text-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-all cursor-pointer"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
               </div>
             </div>
 
-            {/* Card 2: Deployment */}
-            <div
-              onMouseEnter={() => setActiveProcessCard(1)}
-              onMouseLeave={() => setActiveProcessCard(null)}
-              onClick={() => setActiveProcessCard(activeProcessCard === 1 ? null : 1)}
-              className="group bg-zinc-100/80 text-zinc-950 border border-zinc-200 p-7 sm:p-8 flex flex-col justify-start min-h-[300px] sm:min-h-[320px] lg:min-h-[340px] rounded-xs cursor-pointer select-none"
-            >
-              <h3 className="text-xl sm:text-2xl lg:text-3xl font-normal text-zinc-950 tracking-tight transition-colors">
-                Deployment
-              </h3>
-              <div className="mt-14 sm:mt-16 lg:mt-20">
-                <p
-                  className={`text-sm sm:text-base font-normal leading-relaxed transform transition-all duration-300 ease-out ${
-                    activeProcessCard === 1
-                      ? "-translate-y-2.5 text-zinc-950 font-medium"
-                      : "translate-y-0 text-zinc-700 group-hover:-translate-y-2.5 group-hover:text-zinc-950 group-hover:font-medium"
-                  }`}
-                >
-                  We build and release a working system inside your environment, integrated with the tools your people already use.
-                </p>
-              </div>
-            </div>
-
-            {/* Card 3: Validation */}
-            <div
-              onMouseEnter={() => setActiveProcessCard(2)}
-              onMouseLeave={() => setActiveProcessCard(null)}
-              onClick={() => setActiveProcessCard(activeProcessCard === 2 ? null : 2)}
-              className="group bg-zinc-100/80 text-zinc-950 border border-zinc-200 p-7 sm:p-8 flex flex-col justify-start min-h-[300px] sm:min-h-[320px] lg:min-h-[340px] rounded-xs cursor-pointer select-none"
-            >
-              <h3 className="text-xl sm:text-2xl lg:text-3xl font-normal text-zinc-950 tracking-tight transition-colors">
-                Validation
-              </h3>
-              <div className="mt-14 sm:mt-16 lg:mt-20">
-                <p
-                  className={`text-sm sm:text-base font-normal leading-relaxed transform transition-all duration-300 ease-out ${
-                    activeProcessCard === 2
-                      ? "-translate-y-2.5 text-zinc-950 font-medium"
-                      : "translate-y-0 text-zinc-700 group-hover:-translate-y-2.5 group-hover:text-zinc-950 group-hover:font-medium"
-                  }`}
-                >
-                  We test accuracy, reliability and business impact against expert-reviewed benchmarks and agreed targets.
-                </p>
-              </div>
-            </div>
-
-            {/* Card 4: Expansion */}
-            <div
-              onMouseEnter={() => setActiveProcessCard(3)}
-              onMouseLeave={() => setActiveProcessCard(null)}
-              onClick={() => setActiveProcessCard(activeProcessCard === 3 ? null : 3)}
-              className="group bg-zinc-100/80 text-zinc-950 border border-zinc-200 p-7 sm:p-8 flex flex-col justify-start min-h-[300px] sm:min-h-[320px] lg:min-h-[340px] rounded-xs cursor-pointer select-none"
-            >
-              <h3 className="text-xl sm:text-2xl lg:text-3xl font-normal text-zinc-950 tracking-tight transition-colors">
-                Expansion
-              </h3>
-              <div className="mt-14 sm:mt-16 lg:mt-20">
-                <p
-                  className={`text-sm sm:text-base font-normal leading-relaxed transform transition-all duration-300 ease-out ${
-                    activeProcessCard === 3
-                      ? "-translate-y-2.5 text-zinc-950 font-medium"
-                      : "translate-y-0 text-zinc-700 group-hover:-translate-y-2.5 group-hover:text-zinc-950 group-hover:font-medium"
-                  }`}
-                >
-                  We harden the system for production, extend it across functions and markets, and transfer capability to your organisation.
-                </p>
-              </div>
-            </div>
+            {/* Visually hidden polite status for screen readers */}
+            <p className="sr-only" role="status" aria-live="polite">
+              Showing step {activeProcessStep + 1} of 4: {PROCESS_STEPS[activeProcessStep]?.title}
+            </p>
           </div>
 
           {/* Bottom Right: Book a Demo Button */}
