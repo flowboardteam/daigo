@@ -21,7 +21,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const apiKey = process.env.RESEND_API_KEY || "";
+    const apiKey = process.env.RESEND_CAREERS_API_KEY || process.env.RESEND_API_KEY || "";
     const primaryTo = process.env.CAREERS_PRIMARY_EMAIL || "careers@daigodeploy.com";
     const fallbackTo = process.env.CAREERS_FALLBACK_EMAIL || "careers@flowboard.team";
     const fromAddress = process.env.CAREERS_FROM_EMAIL || "Daigo Careers <onboarding@resend.dev>";

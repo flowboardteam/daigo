@@ -21,7 +21,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const apiKey = process.env.RESEND_API_KEY || "";
+    const apiKey = process.env.RESEND_COMMERCIAL_API_KEY || process.env.RESEND_API_KEY || "";
     const primaryTo = process.env.COMMERCIAL_PRIMARY_EMAIL || "commercial@daigodeploy.com";
     const fallbackTo = process.env.COMMERCIAL_FALLBACK_EMAIL || "commercial@flowboard.team";
     const fromAddress = process.env.COMMERCIAL_FROM_EMAIL || "Daigo Commercial <onboarding@resend.dev>";
