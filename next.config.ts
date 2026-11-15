@@ -1,12 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  experimental: {
-    agentFeedback: true,
+  reactStrictMode: true,
+  images: {
+    formats: ["image/avif", "image/webp"],
   },
-  cacheComponents: true,
-  partialPrefetching: true,
 };
 
 export default nextConfig;

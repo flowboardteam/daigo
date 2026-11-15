@@ -130,13 +130,13 @@ function SeamlessHeroVideo() {
         muted
         playsInline
         preload="auto"
+        poster="/1115-poster.webp"
         style={{ transition: "opacity 500ms ease-in-out" }}
         className={`absolute inset-0 w-full h-full object-cover ${activeSlot === "A" ? "opacity-100 z-10" : "opacity-0 z-0"
           }`}
       >
         <source src="/1115-mobile.mp4" type="video/mp4" media="(max-width: 768px)" />
         <source src="/1115.mp4" type="video/mp4" />
-        <source src="/1115.mov" type="video/quicktime" />
       </video>
 
       {/* Video Slot B - Standby buffer with metadata preload to prevent bandwidth contention */}
@@ -145,14 +145,14 @@ function SeamlessHeroVideo() {
         loop
         muted
         playsInline
-        preload="metadata"
+        preload="none"
+        poster="/1115-poster.webp"
         style={{ transition: "opacity 500ms ease-in-out" }}
         className={`absolute inset-0 w-full h-full object-cover ${activeSlot === "B" ? "opacity-100 z-10" : "opacity-0 z-0"
           }`}
       >
         <source src="/1115-mobile.mp4" type="video/mp4" media="(max-width: 768px)" />
         <source src="/1115.mp4" type="video/mp4" />
-        <source src="/1115.mov" type="video/quicktime" />
       </video>
     </div>
   );
@@ -705,7 +705,7 @@ export default function Home() {
           <div
             className="mt-10 sm:mt-14 relative w-full min-h-[380px] sm:min-h-[360px] lg:h-96 rounded-none overflow-hidden border border-zinc-200 shadow-xl group bg-cover bg-center"
             style={{
-              backgroundImage: `image-set(url('/engineers-at-work.webp') type('image/webp'), url('/engineers-at-work.jpg') type('image/jpeg'))`,
+              backgroundImage: `url('/engineers-at-work.webp'), url('/engineers-at-work.jpg')`,
             }}
           >
             {/* In-situ field telemetry callout (Styled with transparent glass matching the header) */}
@@ -756,7 +756,7 @@ export default function Home() {
                     : "opacity-0 pointer-events-none z-0 scale-[1.02]"
                 }`}
                 style={{
-                  backgroundImage: `image-set(url('/industries/${sectorKey}.webp') type('image/webp'), url('${imgUrl}') type('image/jpeg'))`,
+                  backgroundImage: `url('/industries/${sectorKey}.webp'), url('${imgUrl}')`,
                 }}
               />
             );
@@ -971,7 +971,7 @@ export default function Home() {
         id="hardest-problems"
         className="relative w-full min-h-[85vh] flex items-center justify-center overflow-hidden border-t border-zinc-200 bg-cover bg-center bg-no-repeat transition-all duration-300"
         style={{
-          backgroundImage: `image-set(url('/built-for-enterprise.webp') type('image/webp'), url('/built-for-enterprise.jpg') type('image/jpeg'))`,
+          backgroundImage: `url('/built-for-enterprise.webp'), url('/built-for-enterprise.jpg')`,
         }}
       >
         {/* Section Content */}
