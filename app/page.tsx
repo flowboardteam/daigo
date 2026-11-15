@@ -1019,7 +1019,7 @@ export default function Home() {
                 onMouseEnter={() => setActiveProcessCard(idx)}
                 onMouseLeave={() => setActiveProcessCard(null)}
                 onClick={() => setActiveProcessCard(activeProcessCard === idx ? null : idx)}
-                className="group bg-zinc-100/80 text-zinc-950 border border-zinc-200 p-7 sm:p-8 flex flex-col justify-between min-h-[320px] lg:min-h-[350px] rounded-xs cursor-pointer select-none transition-all duration-300 hover:shadow-lg hover:border-zinc-400"
+                className="group bg-zinc-100/80 text-zinc-950 border border-zinc-200 p-7 sm:p-8 flex flex-col justify-between min-h-[320px] lg:min-h-[350px] rounded-xs cursor-pointer select-none transition-all duration-300 hover:shadow-lg hover:border-zinc-300 outline-none focus:outline-none [-webkit-tap-highlight-color:transparent]"
               >
                 <div>
                   <div className="flex items-center justify-between mb-4">
@@ -1066,35 +1066,29 @@ export default function Home() {
               className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar gap-3.5 pb-4 pt-1 -mx-4 px-4 touch-pan-x"
               style={{ WebkitOverflowScrolling: "touch" }}
             >
-              {PROCESS_STEPS.map((step, idx) => {
-                const isActive = idx === activeProcessStep;
-                return (
-                  <div
-                    key={step.num}
-                    data-process-index={idx}
-                    role="group"
-                    aria-roledescription="slide"
-                    aria-label={`Step ${idx + 1} of 4: ${step.title}`}
-                    onClick={() => scrollToProcess(idx)}
-                    className={`w-[85vw] max-w-[325px] flex-shrink-0 snap-center bg-zinc-50/95 border p-6 flex flex-col justify-center min-h-[210px] rounded-xs shadow-sm transition-all duration-300 cursor-pointer select-none ${
-                      isActive ? "border-zinc-950 shadow-md ring-1 ring-zinc-950/10" : "border-zinc-200"
-                    }`}
-                  >
-                    <h3 className="text-xl font-medium text-zinc-950 tracking-tight mb-3">
-                      {step.title}
-                    </h3>
+              {PROCESS_STEPS.map((step, idx) => (
+                <div
+                  key={step.num}
+                  data-process-index={idx}
+                  role="group"
+                  aria-roledescription="slide"
+                  aria-label={`Step ${idx + 1} of 4: ${step.title}`}
+                  onClick={() => scrollToProcess(idx)}
+                  className="w-[85vw] max-w-[325px] flex-shrink-0 snap-center bg-zinc-50/95 border border-zinc-200 p-6 flex flex-col justify-center min-h-[210px] rounded-xs shadow-sm transition-all duration-300 cursor-pointer select-none outline-none focus:outline-none [-webkit-tap-highlight-color:transparent]"
+                >
+                  <h3 className="text-xl font-medium text-zinc-950 tracking-tight mb-3">
+                    {step.title}
+                  </h3>
 
-                    <p className="text-xs sm:text-sm text-zinc-700 leading-relaxed font-normal">
-                      {step.description}
-                    </p>
-                  </div>
-                );
-              })}
+                  <p className="text-xs sm:text-sm text-zinc-700 leading-relaxed font-normal">
+                    {step.description}
+                  </p>
+                </div>
+              ))}
             </div>
 
-            {/* Bottom Controls with Dots, Swipe label, and Navigation Chevrons */}
-            <div className="flex items-center justify-between mt-2.5 px-1">
-              {/* Dots */}
+            {/* Bottom Controls with Centered Dots */}
+            <div className="flex items-center justify-center mt-3 px-1">
               <div className="flex items-center gap-1.5">
                 {PROCESS_STEPS.map((step, idx) => {
                   const isActive = idx === activeProcessStep;
@@ -1111,36 +1105,6 @@ export default function Home() {
                     />
                   );
                 })}
-              </div>
-
-              <span className="text-[11px] font-mono text-zinc-500 flex items-center gap-1">
-                <span>&larr;</span> Swipe <span>&rarr;</span>
-              </span>
-
-              {/* Prev/Next Buttons */}
-              <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  aria-label="Previous step"
-                  onClick={() => scrollToProcess(activeProcessStep - 1)}
-                  disabled={activeProcessStep === 0}
-                  className="w-8 h-8 rounded-full border border-zinc-300 bg-white flex items-center justify-center text-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-all cursor-pointer"
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  aria-label="Next step"
-                  onClick={() => scrollToProcess(activeProcessStep + 1)}
-                  disabled={activeProcessStep === PROCESS_STEPS.length - 1}
-                  className="w-8 h-8 rounded-full border border-zinc-300 bg-white flex items-center justify-center text-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-all cursor-pointer"
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
               </div>
             </div>
 
