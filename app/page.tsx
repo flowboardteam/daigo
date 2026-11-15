@@ -36,13 +36,6 @@ function SeamlessHeroVideo() {
   const videoRefB = useRef<HTMLVideoElement>(null);
   const [activeSlot, setActiveSlot] = useState<"A" | "B">("A");
   const isTransitioning = useRef(false);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    if (typeof window !== "undefined" && window.innerWidth <= 768) {
-      setIsMobile(true);
-    }
-  }, []);
 
   useEffect(() => {
     const vA = videoRefA.current;
@@ -129,7 +122,7 @@ function SeamlessHeroVideo() {
 
   return (
     <div className="absolute inset-0 w-full h-full overflow-hidden z-0 pointer-events-none select-none bg-black">
-      {/* Video Slot A - Eagerly loaded primary stream with responsive mobile/desktop formats */}
+      {/* Video Slot A - Eagerly loaded primary stream with full native 1440x1080 resolution across all browsers */}
       <video
         ref={videoRefA}
         autoPlay
@@ -138,11 +131,18 @@ function SeamlessHeroVideo() {
         playsInline
         preload="auto"
         poster="/1115-poster.webp"
-        style={{ transition: "opacity 500ms ease-in-out" }}
+        style={{
+          transition: "opacity 500ms ease-in-out",
+          transform: "translate3d(0, 0, 0)",
+          WebkitTransform: "translate3d(0, 0, 0)",
+          backfaceVisibility: "hidden",
+          WebkitBackfaceVisibility: "hidden",
+          willChange: "opacity",
+        }}
         className={`absolute inset-0 w-full h-full object-cover ${activeSlot === "A" ? "opacity-100 z-10" : "opacity-0 z-0"
           }`}
       >
-        <source src={isMobile ? "/1115-mobile.mp4" : "/1115.mp4"} type="video/mp4" />
+        <source src="/1115.mp4" type="video/mp4" />
       </video>
 
       {/* Video Slot B - Standby buffer with metadata preload to prevent bandwidth contention */}
@@ -153,11 +153,18 @@ function SeamlessHeroVideo() {
         playsInline
         preload="none"
         poster="/1115-poster.webp"
-        style={{ transition: "opacity 500ms ease-in-out" }}
+        style={{
+          transition: "opacity 500ms ease-in-out",
+          transform: "translate3d(0, 0, 0)",
+          WebkitTransform: "translate3d(0, 0, 0)",
+          backfaceVisibility: "hidden",
+          WebkitBackfaceVisibility: "hidden",
+          willChange: "opacity",
+        }}
         className={`absolute inset-0 w-full h-full object-cover ${activeSlot === "B" ? "opacity-100 z-10" : "opacity-0 z-0"
           }`}
       >
-        <source src={isMobile ? "/1115-mobile.mp4" : "/1115.mp4"} type="video/mp4" />
+        <source src="/1115.mp4" type="video/mp4" />
       </video>
     </div>
   );
