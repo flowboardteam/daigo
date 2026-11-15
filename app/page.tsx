@@ -215,7 +215,6 @@ export default function Home() {
   const [activeSectorId, setActiveSectorId] = useState<string>("energy");
   const [isA11yOpen, setIsA11yOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [activeProcessCard, setActiveProcessCard] = useState<number | null>(null);
   const [activeProcessStep, setActiveProcessStep] = useState<number>(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -1013,42 +1012,17 @@ export default function Home() {
 
           {/* Desktop 4 Cards Grid */}
           <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-            {PROCESS_STEPS.map((step, idx) => (
+            {PROCESS_STEPS.map((step) => (
               <div
                 key={step.num}
-                onMouseEnter={() => setActiveProcessCard(idx)}
-                onMouseLeave={() => setActiveProcessCard(null)}
-                onClick={() => setActiveProcessCard(activeProcessCard === idx ? null : idx)}
-                className="group bg-zinc-100/80 text-zinc-950 border border-zinc-200 p-7 sm:p-8 flex flex-col justify-between min-h-[320px] lg:min-h-[350px] rounded-xs cursor-pointer select-none transition-all duration-300 hover:shadow-lg hover:border-zinc-300 outline-none focus:outline-none [-webkit-tap-highlight-color:transparent]"
+                className="bg-zinc-100/80 text-zinc-950 border border-zinc-200 p-7 sm:p-8 flex flex-col min-h-[220px] lg:min-h-[250px] rounded-xs select-none transition-all duration-300 shadow-sm outline-none focus:outline-none [-webkit-tap-highlight-color:transparent]"
               >
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-xs font-mono font-semibold text-zinc-500 uppercase tracking-widest">{step.num}</span>
-                    <span className="text-[10px] font-mono text-zinc-600 bg-zinc-200/80 px-2 py-0.5 rounded-xs">
-                      {step.phase.split("//")[1]?.trim()}
-                    </span>
-                  </div>
-                  <h3 className="text-xl sm:text-2xl lg:text-3xl font-normal text-zinc-950 tracking-tight transition-colors">
-                    {step.title}
-                  </h3>
-                  <p
-                    className={`text-sm sm:text-base font-normal leading-relaxed mt-6 transform transition-all duration-300 ease-out ${
-                      activeProcessCard === idx
-                        ? "-translate-y-1.5 text-zinc-950 font-medium"
-                        : "translate-y-0 text-zinc-700 group-hover:-translate-y-1.5 group-hover:text-zinc-950 group-hover:font-medium"
-                    }`}
-                  >
-                    {step.description}
-                  </p>
-                </div>
-                <div className="pt-4 border-t border-zinc-200/80 mt-6">
-                  <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block mb-1">
-                    Deliverable
-                  </span>
-                  <span className="text-xs font-semibold text-zinc-900 block truncate">
-                    {step.deliverable}
-                  </span>
-                </div>
+                <h3 className="text-xl sm:text-2xl font-normal text-zinc-950 tracking-tight mb-4">
+                  {step.title}
+                </h3>
+                <p className="text-sm sm:text-base font-normal leading-relaxed text-zinc-700">
+                  {step.description}
+                </p>
               </div>
             ))}
           </div>
