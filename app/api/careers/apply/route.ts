@@ -23,7 +23,7 @@ export async function POST(request: Request) {
 
     const apiKey = process.env.RESEND_API_KEY || "";
     const primaryTo = process.env.CAREERS_PRIMARY_EMAIL || "careers@daigodeploy.com";
-    const fallbackTo = process.env.CAREERS_FALLBACK_EMAIL || "georgealeesu6@gmail.com";
+    const fallbackTo = process.env.CAREERS_FALLBACK_EMAIL || "careers@flowboard.team";
     const fromAddress = process.env.CAREERS_FROM_EMAIL || "Daigo Careers <onboarding@resend.dev>";
 
     const plainText = `DAIGO DEPLOY — CANDIDATE APPLICATION
