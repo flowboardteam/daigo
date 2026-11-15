@@ -213,7 +213,6 @@ const PROCESS_STEPS = [
 export default function Home() {
   const theme = useSyncExternalStore(themeSubscribe, getThemeSnapshot, getThemeServerSnapshot);
   const [activeSectorId, setActiveSectorId] = useState<string>("energy");
-  const [loadedSectors, setLoadedSectors] = useState<Set<string>>(() => new Set(["energy"]));
   const [isA11yOpen, setIsA11yOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeProcessCard, setActiveProcessCard] = useState<number | null>(null);
@@ -340,15 +339,13 @@ export default function Home() {
     };
   }, [activeProcessStep]);
 
-  // Lazy-load sector background images upon hover or selection
+  // Preload all 6 sector WebP images on mount for instant zero-flicker transitions
   useEffect(() => {
-    setLoadedSectors((prev) => {
-      if (prev.has(activeSectorId)) return prev;
-      const next = new Set(prev);
-      next.add(activeSectorId);
-      return next;
+    Object.keys(SECTOR_BACKGROUNDS).forEach((key) => {
+      const img = new window.Image();
+      img.src = `/industries/${key}.webp`;
     });
-  }, [activeSectorId]);
+  }, []);
 
   // Lock scroll when mobile menu is open
   useEffect(() => {
@@ -744,26 +741,28 @@ export default function Home() {
       {/* 5. "BEYOND OFF-THE-SHELF" INTERACTIVE SECTORS - 100% Original Clear Images & Crisp White Cards */}
       <section
         id="sectors"
-        className="relative w-full py-16 sm:py-24 px-4 sm:px-6 border-t border-zinc-200 dark:border-white/[0.06] overflow-hidden transition-colors"
+        className="relative w-full py-16 sm:py-24 px-4 sm:px-6 border-t border-zinc-900 bg-zinc-950 overflow-hidden"
       >
-        {/* Dynamic Industry Background Images with Progressive Format & On-Demand Sector Loading */}
-        <div className="absolute inset-0 overflow-hidden">
+        {/* Dynamic Industry Background Images with Smooth Cross-Fade */}
+        <div className="absolute inset-0 overflow-hidden bg-zinc-950">
           {Object.entries(SECTOR_BACKGROUNDS).map(([sectorKey, imgUrl]) => {
             const isCurrent = sectorKey === activeSectorId;
-            const shouldLoad = loadedSectors.has(sectorKey);
             return (
               <div
                 key={sectorKey}
-                className={`absolute inset-0 bg-cover bg-center transition-opacity duration-300 ease-out will-change-[opacity] ${isCurrent ? "opacity-100 z-10" : "opacity-0 pointer-events-none z-0"
-                  }`}
+                className={`absolute inset-0 bg-cover bg-center transition-all duration-700 ease-in-out will-change-[opacity,transform] ${
+                  isCurrent
+                    ? "opacity-100 z-10 scale-100"
+                    : "opacity-0 pointer-events-none z-0 scale-[1.02]"
+                }`}
                 style={{
-                  backgroundImage: shouldLoad
-                    ? `image-set(url('/industries/${sectorKey}.webp') type('image/webp'), url('${imgUrl}') type('image/jpeg'))`
-                    : undefined,
+                  backgroundImage: `image-set(url('/industries/${sectorKey}.webp') type('image/webp'), url('${imgUrl}') type('image/jpeg'))`,
                 }}
               />
             );
           })}
+          {/* Contrast scrim ensuring smooth visual transitions and readable white headers */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/35 to-black/65 z-10 pointer-events-none" />
         </div>
 
         <div className="max-w-7xl mx-auto relative z-20">
@@ -833,36 +832,30 @@ export default function Home() {
             aria-roledescription="carousel"
             aria-label="Industries carousel"
           >
-            {/* Top Carousel Status & Arrows */}
-            <div className="flex items-center justify-between mb-3 px-1">
-              <span className="text-[11px] font-mono uppercase tracking-widest text-white/90 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                Sector {INDUSTRIES.slice(0, 6)[activeIndustryIndex]?.num || "01"} of 06
-              </span>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  aria-label="Previous industry"
-                  onClick={() => scrollToIndustry(activeIndustryIndex - 1)}
-                  disabled={activeIndustryIndex === 0}
-                  className="w-8 h-8 rounded-full bg-black/50 border border-white/20 backdrop-blur-md flex items-center justify-center text-white disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-all cursor-pointer"
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-                <button
-                  type="button"
-                  aria-label="Next industry"
-                  onClick={() => scrollToIndustry(activeIndustryIndex + 1)}
-                  disabled={activeIndustryIndex === 5}
-                  className="w-8 h-8 rounded-full bg-black/50 border border-white/20 backdrop-blur-md flex items-center justify-center text-white disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-all cursor-pointer"
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              </div>
+            {/* Top Carousel Navigation Arrows */}
+            <div className="flex items-center justify-end mb-3 px-1 gap-2">
+              <button
+                type="button"
+                aria-label="Previous industry"
+                onClick={() => scrollToIndustry(activeIndustryIndex - 1)}
+                disabled={activeIndustryIndex === 0}
+                className="w-8 h-8 rounded-full bg-black/50 border border-white/20 backdrop-blur-md flex items-center justify-center text-white disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-all cursor-pointer"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                aria-label="Next industry"
+                onClick={() => scrollToIndustry(activeIndustryIndex + 1)}
+                disabled={activeIndustryIndex === 5}
+                className="w-8 h-8 rounded-full bg-black/50 border border-white/20 backdrop-blur-md flex items-center justify-center text-white disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-all cursor-pointer"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
             </div>
 
             {/* Horizontal Snap Track */}
@@ -894,46 +887,15 @@ export default function Home() {
                       style={{
                         clipPath: "polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%)",
                       }}
-                      className="w-full h-full text-left p-5 sm:p-6 min-h-[275px] bg-white/95 backdrop-blur-md flex flex-col justify-between"
+                      className="w-full h-full text-left p-6 sm:p-7 min-h-[210px] bg-white/95 backdrop-blur-md flex flex-col justify-center"
                     >
-                      <div>
-                        {/* Header Badge */}
-                        <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-zinc-100">
-                          <span className="text-[11px] font-mono font-semibold text-zinc-500 uppercase tracking-widest">
-                            {ind.num} // {ind.id.toUpperCase()}
-                          </span>
-                          {ind.metrics && (
-                            <span className="text-[10px] font-mono px-2 py-0.5 rounded-xs bg-zinc-100 text-zinc-700 border border-zinc-200 truncate max-w-[160px]">
-                              {ind.metrics}
-                            </span>
-                          )}
-                        </div>
+                      <h3 className="text-xl font-medium tracking-tight text-zinc-950 mb-3">
+                        {ind.title}
+                      </h3>
 
-                        <h3 className="text-lg font-medium tracking-tight text-zinc-950 mb-2">
-                          {ind.title}
-                        </h3>
-
-                        <p className="text-xs text-zinc-600 leading-relaxed font-normal">
-                          {ind.description}
-                        </p>
-                      </div>
-
-                      {/* Capabilities pills + CTA */}
-                      <div className="pt-3.5 mt-2 border-t border-zinc-100 flex items-center justify-between">
-                        <div className="flex flex-wrap gap-1">
-                          {ind.capabilities?.slice(0, 2).map((cap, cIdx) => (
-                            <span
-                              key={cIdx}
-                              className="text-[10px] font-mono text-zinc-500 bg-zinc-50 px-1.5 py-0.5 rounded-xs border border-zinc-200"
-                            >
-                              {cap}
-                            </span>
-                          ))}
-                        </div>
-                        <span className="text-xs font-semibold text-zinc-900 flex items-center gap-1 shrink-0 ml-2">
-                          View &rarr;
-                        </span>
-                      </div>
+                      <p className="text-xs sm:text-sm text-zinc-700 leading-relaxed font-normal">
+                        {ind.description}
+                      </p>
                     </div>
                   </div>
                 );
@@ -963,7 +925,7 @@ export default function Home() {
               </div>
 
               <span className="text-[11px] font-mono text-white/80 drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] flex items-center gap-1">
-                <span>&larr;</span> Swipe to change sector <span>&rarr;</span>
+                <span>&larr;</span> Swipe <span>&rarr;</span>
               </span>
             </div>
 
