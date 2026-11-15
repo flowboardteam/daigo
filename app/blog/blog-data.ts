@@ -25,7 +25,7 @@ export const POSTS: BlogPost[] = [
       "\"Enduring enterprise AI cannot be built in a vacuum. It requires engineers working side-by-side with real-world operators on the front lines to solve the continent's most complex operational challenges,\" said the engineering leadership team.",
       "Traditional enterprise software assumes clean data, homogeneous cloud APIs, and predictable operating environments. African industrial and financial operations operate under vastly different ground truths: fragmented data pipelines, bespoke legacy machinery, intermittent connectivity, and mission-critical stakes.",
       "Daigo Deploy eliminates the disconnect between frontier AI research and operational execution. By placing forward-deployed engineers directly inside operational facilities—from mining pits and maritime logistics hubs to trading desks and power dispatch stations—the firm builds deterministic, verifiable agent workflows that solve real operational bottlenecks in weeks, not years.",
-      "Organizations interested in deploying forward-deployed engineering teams or booking an operational briefing can connect directly with the Daigo Deploy engineering group at careers@daigodeploy.com or via our direct enterprise portal.",
+      "Organizations interested in deploying forward-deployed engineering teams or booking an operational briefing can connect directly with the Daigo Deploy engineering group at commercial@daigodeploy.com or via our direct enterprise portal.",
     ],
   },
   {
