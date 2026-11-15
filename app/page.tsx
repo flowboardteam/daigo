@@ -136,6 +136,7 @@ function SeamlessHeroVideo() {
       >
         <source src="/1115-mobile.mp4" type="video/mp4" media="(max-width: 768px)" />
         <source src="/1115.mp4" type="video/mp4" />
+        <source src="/1115.mov" type="video/quicktime" />
       </video>
 
       {/* Video Slot B - Standby buffer with metadata preload to prevent bandwidth contention */}
@@ -151,6 +152,7 @@ function SeamlessHeroVideo() {
       >
         <source src="/1115-mobile.mp4" type="video/mp4" media="(max-width: 768px)" />
         <source src="/1115.mp4" type="video/mp4" />
+        <source src="/1115.mov" type="video/quicktime" />
       </video>
     </div>
   );
