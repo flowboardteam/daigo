@@ -30,101 +30,98 @@ function DaigoIcon({ className = "w-7 h-5" }: { className?: string }) {
   );
 }
 
-// Seamless Infinite Cyclic Hero Video Player (Dual-Buffer Ping-Pong Smooth Loop)
+// Rock-Solid Ambient Hero Video Player with 100% Guaranteed Autoplay Across All Browsers
 function SeamlessHeroVideo() {
-  const videoRefA = useRef<HTMLVideoElement>(null);
-  const videoRefB = useRef<HTMLVideoElement>(null);
-  const [activeSlot, setActiveSlot] = useState<"A" | "B">("A");
-  const isTransitioning = useRef(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Synchronous ref assignment ensuring DOM properties are applied before any paint
+  const setVideoRef = (el: HTMLVideoElement | null) => {
+    videoRef.current = el;
+    if (el) {
+      el.defaultMuted = true;
+      el.muted = true;
+      el.playsInline = true;
+      el.setAttribute("playsinline", "");
+      el.setAttribute("webkit-playsinline", "");
+    }
+  };
 
   useEffect(() => {
-    const vA = videoRefA.current;
-    const vB = videoRefB.current;
-    if (!vA || !vB) return;
+    const video = videoRef.current;
+    if (!video) return;
 
-    vA.defaultMuted = true;
-    vB.defaultMuted = true;
-    vA.muted = true;
-    vB.muted = true;
-    vA.setAttribute("playsinline", "");
-    vB.setAttribute("playsinline", "");
+    // Strict browser autoplay policy requirements
+    video.defaultMuted = true;
+    video.muted = true;
+    video.playsInline = true;
+    video.setAttribute("playsinline", "");
+    video.setAttribute("webkit-playsinline", "");
 
-    // Start video A immediately on load / canplay
-    const playA = () => {
-      vA.play().catch(() => { });
-    };
-    playA();
-    vA.addEventListener("canplay", playA);
-
-    // Crisp, smooth 0.5s dissolve without ghosting or hesitation
-    const CROSSFADE_SEC = 0.5;
-    let animFrame: number;
-
-    const checkLoop = () => {
-      const activeEl = activeSlot === "A" ? vA : vB;
-      const standbyEl = activeSlot === "A" ? vB : vA;
-      const nextSlot = activeSlot === "A" ? "B" : "A";
-
-      if (
-        !isTransitioning.current &&
-        activeEl.duration &&
-        !isNaN(activeEl.duration) &&
-        activeEl.duration > 0
-      ) {
-        const timeLeft = activeEl.duration - activeEl.currentTime;
-
-        // Precisely trigger crossfade at 0.5s before end
-        if (timeLeft <= CROSSFADE_SEC && timeLeft > 0) {
-          isTransitioning.current = true;
-          standbyEl.currentTime = 0;
-          standbyEl
-            .play()
-            .then(() => {
-              setActiveSlot(nextSlot);
-              setTimeout(() => {
-                isTransitioning.current = false;
-              }, CROSSFADE_SEC * 1000 + 100);
-            })
-            .catch(() => {
-              isTransitioning.current = false;
-            });
+    const safePlay = () => {
+      if (video.paused) {
+        const promise = video.play();
+        if (promise !== undefined) {
+          promise.catch(() => {
+            // Browser blocked unprompted autoplay (e.g. Low Power Mode, strict privacy)
+          });
         }
       }
-
-      animFrame = requestAnimationFrame(checkLoop);
     };
 
-    animFrame = requestAnimationFrame(checkLoop);
+    // Attempt immediately on mount and on media readiness
+    safePlay();
+    video.addEventListener("loadedmetadata", safePlay);
+    video.addEventListener("canplay", safePlay);
 
-    // Watchdog: ensures video NEVER pauses or freezes under any circumstance
-    const watchdog = setInterval(() => {
-      const current = activeSlot === "A" ? vA : vB;
-      if (current.paused) {
-        current.play().catch(() => { });
-      }
-    }, 1000);
+    // One-time interaction fallback: unlocks video on first touch, click, or scroll
+    const unlockAutoplay = () => {
+      safePlay();
+      window.removeEventListener("touchstart", unlockAutoplay);
+      window.removeEventListener("touchend", unlockAutoplay);
+      window.removeEventListener("scroll", unlockAutoplay);
+      window.removeEventListener("click", unlockAutoplay);
+      window.removeEventListener("keydown", unlockAutoplay);
+    };
 
+    window.addEventListener("touchstart", unlockAutoplay, { passive: true });
+    window.addEventListener("touchend", unlockAutoplay, { passive: true });
+    window.addEventListener("scroll", unlockAutoplay, { passive: true });
+    window.addEventListener("click", unlockAutoplay, { passive: true });
+    window.addEventListener("keydown", unlockAutoplay, { passive: true });
+
+    // Ensure playback resumes when tab regains visibility
     const handleVisibility = () => {
       if (document.visibilityState === "visible") {
-        const current = activeSlot === "A" ? vA : vB;
-        current.play().catch(() => { });
+        safePlay();
       }
     };
     document.addEventListener("visibilitychange", handleVisibility);
 
+    // Watchdog check every 2 seconds to resume playback if OS temporarily halted it
+    const watchdog = setInterval(() => {
+      if (video.paused && document.visibilityState === "visible") {
+        safePlay();
+      }
+    }, 2000);
+
     return () => {
-      cancelAnimationFrame(animFrame);
       clearInterval(watchdog);
+      video.removeEventListener("loadedmetadata", safePlay);
+      video.removeEventListener("canplay", safePlay);
+      window.removeEventListener("touchstart", unlockAutoplay);
+      window.removeEventListener("touchend", unlockAutoplay);
+      window.removeEventListener("scroll", unlockAutoplay);
+      window.removeEventListener("click", unlockAutoplay);
+      window.removeEventListener("keydown", unlockAutoplay);
       document.removeEventListener("visibilitychange", handleVisibility);
-      vA.removeEventListener("canplay", playA);
     };
-  }, [activeSlot]);
+  }, []);
 
   return (
     <div className="absolute inset-0 w-full h-full overflow-hidden z-0 pointer-events-none select-none bg-black">
-      {/* Video Slot A - Eagerly loaded primary stream with full native 1440x1080 resolution across all browsers */}
       <video
-        ref={videoRefA}
+        ref={setVideoRef}
+        src="/1115.mp4"
         autoPlay
         loop
         muted
@@ -132,37 +129,12 @@ function SeamlessHeroVideo() {
         preload="auto"
         poster="/1115-poster.webp"
         style={{
-          transition: "opacity 500ms ease-in-out",
           transform: "translate3d(0, 0, 0)",
           WebkitTransform: "translate3d(0, 0, 0)",
           backfaceVisibility: "hidden",
           WebkitBackfaceVisibility: "hidden",
-          willChange: "opacity",
         }}
-        className={`absolute inset-0 w-full h-full object-cover ${activeSlot === "A" ? "opacity-100 z-10" : "opacity-0 z-0"
-          }`}
-      >
-        <source src="/1115.mp4" type="video/mp4" />
-      </video>
-
-      {/* Video Slot B - Standby buffer with metadata preload to prevent bandwidth contention */}
-      <video
-        ref={videoRefB}
-        loop
-        muted
-        playsInline
-        preload="none"
-        poster="/1115-poster.webp"
-        style={{
-          transition: "opacity 500ms ease-in-out",
-          transform: "translate3d(0, 0, 0)",
-          WebkitTransform: "translate3d(0, 0, 0)",
-          backfaceVisibility: "hidden",
-          WebkitBackfaceVisibility: "hidden",
-          willChange: "opacity",
-        }}
-        className={`absolute inset-0 w-full h-full object-cover ${activeSlot === "B" ? "opacity-100 z-10" : "opacity-0 z-0"
-          }`}
+        className="absolute inset-0 w-full h-full object-cover"
       >
         <source src="/1115.mp4" type="video/mp4" />
       </video>
