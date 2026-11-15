@@ -28,7 +28,7 @@ export async function POST(request: Request) {
 
     const plainText = `DAIGO DEPLOY — CANDIDATE APPLICATION
 
-Role / Discipline: ${role}
+Role: ${role}
 Candidate Name: ${name}
 Email Address: ${email}
 Phone / Line: ${phone || "Not provided"}
@@ -51,12 +51,12 @@ ${message || "No additional message provided."}
   <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; border: 1px solid #e4e4e7; overflow: hidden;">
     <div style="background-color: #09090b; padding: 24px 32px;">
       <h1 style="color: #ffffff; font-size: 18px; margin: 0; font-weight: 700; letter-spacing: 0.5px;">DAIGO DEPLOY</h1>
-      <p style="color: #a1a1aa; font-size: 12px; margin: 4px 0 0; text-transform: uppercase; letter-spacing: 1px;">Candidate Application System</p>
+      <p style="color: #a1a1aa; font-size: 12px; margin: 4px 0 0; text-transform: uppercase; letter-spacing: 1px;">Candidate Application</p>
     </div>
     
     <div style="padding: 32px;">
       <div style="margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #f4f4f5;">
-        <span style="font-size: 11px; font-family: monospace; color: #71717a; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 4px;">Role / Focus</span>
+        <span style="font-size: 11px; font-family: monospace; color: #71717a; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 4px;">Role</span>
         <h2 style="font-size: 20px; font-weight: 700; color: #09090b; margin: 0;">${role}</h2>
       </div>
 
