@@ -778,7 +778,7 @@ export default function Home() {
 
             <Link
               href="/industries"
-              className="text-xs tracking-wider font-semibold text-white hover:text-zinc-200 transition-colors flex items-center gap-2 cursor-pointer pb-2 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]"
+              className="hidden md:inline-flex text-xs tracking-wider font-semibold text-white hover:text-zinc-200 transition-colors items-center gap-2 cursor-pointer pb-2 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]"
             >
               See All Industries <span>&rarr;</span>
             </Link>
@@ -1090,36 +1090,6 @@ export default function Home() {
             aria-roledescription="carousel"
             aria-label="Our Process Deployment Lifecycle"
           >
-            {/* Top Interactive Phase Tabs */}
-            <div className="flex overflow-x-auto no-scrollbar gap-2 pb-3 mb-3 -mx-1 px-1">
-              {PROCESS_STEPS.map((step, idx) => {
-                const isActive = idx === activeProcessStep;
-                return (
-                  <button
-                    key={step.num}
-                    type="button"
-                    onClick={() => scrollToProcess(idx)}
-                    className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-mono tracking-wider uppercase whitespace-nowrap rounded-sm transition-all cursor-pointer ${
-                      isActive
-                        ? "bg-zinc-950 text-white font-semibold shadow-sm"
-                        : "bg-zinc-100 text-zinc-600 hover:text-zinc-950 hover:bg-zinc-200/80"
-                    }`}
-                  >
-                    <span className="opacity-60">{step.num}</span>
-                    <span>{step.title}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Stepper Progress Bar */}
-            <div className="relative w-full h-1 bg-zinc-200 rounded-full mb-4 overflow-hidden">
-              <div
-                className="absolute top-0 left-0 h-full bg-zinc-950 transition-all duration-300 ease-out"
-                style={{ width: `${((activeProcessStep + 1) / PROCESS_STEPS.length) * 100}%` }}
-              />
-            </div>
-
             {/* Step Cards Horizontal Snap Track */}
             <div
               ref={processCarouselRef}
@@ -1128,7 +1098,6 @@ export default function Home() {
             >
               {PROCESS_STEPS.map((step, idx) => {
                 const isActive = idx === activeProcessStep;
-                const nextStep = PROCESS_STEPS[idx + 1];
                 return (
                   <div
                     key={step.num}
@@ -1136,72 +1105,24 @@ export default function Home() {
                     role="group"
                     aria-roledescription="slide"
                     aria-label={`Step ${idx + 1} of 4: ${step.title}`}
-                    className={`w-[85vw] max-w-[335px] flex-shrink-0 snap-center bg-zinc-50/95 border p-5 sm:p-6 flex flex-col justify-between min-h-[360px] rounded-xs shadow-sm transition-all duration-300 ${
+                    onClick={() => scrollToProcess(idx)}
+                    className={`w-[85vw] max-w-[325px] flex-shrink-0 snap-center bg-zinc-50/95 border p-6 flex flex-col justify-center min-h-[210px] rounded-xs shadow-sm transition-all duration-300 cursor-pointer select-none ${
                       isActive ? "border-zinc-950 shadow-md ring-1 ring-zinc-950/10" : "border-zinc-200"
                     }`}
                   >
-                    <div>
-                      {/* Step Header */}
-                      <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-zinc-200/80">
-                        <span className="text-[11px] font-mono font-semibold text-zinc-950 uppercase tracking-widest">
-                          STEP {step.num} OF 04
-                        </span>
-                        <span className="text-[10px] font-mono text-zinc-600 bg-zinc-200/80 px-2 py-0.5 rounded-xs">
-                          {step.phase.split("//")[1]?.trim() || "Phase"}
-                        </span>
-                      </div>
+                    <h3 className="text-xl font-medium text-zinc-950 tracking-tight mb-3">
+                      {step.title}
+                    </h3>
 
-                      {/* Step Title */}
-                      <h3 className="text-2xl font-normal text-zinc-950 tracking-tight mb-2.5">
-                        {step.title}
-                      </h3>
-
-                      {/* Step Description */}
-                      <p className="text-xs sm:text-sm text-zinc-700 leading-relaxed font-normal">
-                        {step.description}
-                      </p>
-
-                      {/* Key Deliverable Box */}
-                      <div className="bg-white border border-zinc-200/80 p-3 rounded-xs mt-4 shadow-xs">
-                        <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block mb-0.5">
-                          Key Deliverable
-                        </span>
-                        <p className="text-xs font-semibold text-zinc-950">
-                          {step.deliverable}
-                        </p>
-                        <p className="text-[11px] text-zinc-600 mt-0.5">
-                          {step.impact}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Bottom Step Advancement Action */}
-                    <div className="pt-4 mt-3 border-t border-zinc-200/70">
-                      {nextStep ? (
-                        <button
-                          type="button"
-                          onClick={() => scrollToProcess(idx + 1)}
-                          className="w-full flex items-center justify-between text-xs font-semibold uppercase tracking-wider py-2.5 px-3.5 bg-zinc-950 text-white hover:bg-black active:scale-[0.99] transition-all cursor-pointer"
-                        >
-                          <span>Next: {nextStep.title}</span>
-                          <span>&rarr;</span>
-                        </button>
-                      ) : (
-                        <Link
-                          href="/demo"
-                          className="w-full flex items-center justify-between text-xs font-semibold uppercase tracking-wider py-2.5 px-3.5 bg-zinc-950 text-white hover:bg-black active:scale-[0.99] transition-all cursor-pointer"
-                        >
-                          <span>Book A Demo</span>
-                          <span>&rarr;</span>
-                        </Link>
-                      )}
-                    </div>
+                    <p className="text-xs sm:text-sm text-zinc-700 leading-relaxed font-normal">
+                      {step.description}
+                    </p>
                   </div>
                 );
               })}
             </div>
 
-            {/* Bottom Controls with Chevrons and Step Dots */}
+            {/* Bottom Controls with Dots, Swipe label, and Navigation Chevrons */}
             <div className="flex items-center justify-between mt-2.5 px-1">
               {/* Dots */}
               <div className="flex items-center gap-1.5">
@@ -1222,8 +1143,12 @@ export default function Home() {
                 })}
               </div>
 
+              <span className="text-[11px] font-mono text-zinc-500 flex items-center gap-1">
+                <span>&larr;</span> Swipe <span>&rarr;</span>
+              </span>
+
               {/* Prev/Next Buttons */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <button
                   type="button"
                   aria-label="Previous step"
