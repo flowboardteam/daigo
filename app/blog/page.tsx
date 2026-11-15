@@ -31,6 +31,8 @@ export default function BlogPage() {
                       }}
                       className="relative overflow-hidden bg-zinc-100 aspect-[16/10] w-full shrink-0 mb-6"
                     >
+                    <picture>
+                      <source srcSet={post.image.replace(/\.jpg$/, ".webp")} type="image/webp" />
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={post.image}
@@ -38,6 +40,7 @@ export default function BlogPage() {
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         loading="lazy"
                       />
+                    </picture>
                     </div>
                   )}
 

@@ -42,13 +42,19 @@ function SeamlessHeroVideo() {
     const vB = videoRefB.current;
     if (!vA || !vB) return;
 
+    vA.defaultMuted = true;
+    vB.defaultMuted = true;
     vA.muted = true;
     vB.muted = true;
     vA.setAttribute("playsinline", "");
     vB.setAttribute("playsinline", "");
 
-    // Start video A immediately
-    vA.play().catch(() => { });
+    // Start video A immediately on load / canplay
+    const playA = () => {
+      vA.play().catch(() => { });
+    };
+    playA();
+    vA.addEventListener("canplay", playA);
 
     // Crisp, smooth 0.5s dissolve without ghosting or hesitation
     const CROSSFADE_SEC = 0.5;
@@ -110,12 +116,13 @@ function SeamlessHeroVideo() {
       cancelAnimationFrame(animFrame);
       clearInterval(watchdog);
       document.removeEventListener("visibilitychange", handleVisibility);
+      vA.removeEventListener("canplay", playA);
     };
   }, [activeSlot]);
 
   return (
     <div className="absolute inset-0 w-full h-full overflow-hidden z-0 pointer-events-none select-none bg-black">
-      {/* Video Slot A */}
+      {/* Video Slot A - Eagerly loaded primary stream with responsive mobile/desktop formats */}
       <video
         ref={videoRefA}
         autoPlay
@@ -127,23 +134,23 @@ function SeamlessHeroVideo() {
         className={`absolute inset-0 w-full h-full object-cover ${activeSlot === "A" ? "opacity-100 z-10" : "opacity-0 z-0"
           }`}
       >
+        <source src="/1113-mobile.mp4" type="video/mp4" media="(max-width: 768px)" />
         <source src="/1113.mp4" type="video/mp4" />
-        <source src="/1113.mov" type="video/quicktime" />
       </video>
 
-      {/* Video Slot B */}
+      {/* Video Slot B - Standby buffer with metadata preload to prevent bandwidth contention */}
       <video
         ref={videoRefB}
         loop
         muted
         playsInline
-        preload="auto"
+        preload="metadata"
         style={{ transition: "opacity 500ms ease-in-out" }}
         className={`absolute inset-0 w-full h-full object-cover ${activeSlot === "B" ? "opacity-100 z-10" : "opacity-0 z-0"
           }`}
       >
+        <source src="/1113-mobile.mp4" type="video/mp4" media="(max-width: 768px)" />
         <source src="/1113.mp4" type="video/mp4" />
-        <source src="/1113.mov" type="video/quicktime" />
       </video>
     </div>
   );
@@ -169,10 +176,21 @@ const getThemeServerSnapshot = (): "light" | "dark" => "light";
 export default function Home() {
   const theme = useSyncExternalStore(themeSubscribe, getThemeSnapshot, getThemeServerSnapshot);
   const [activeSectorId, setActiveSectorId] = useState<string>("energy");
+  const [loadedSectors, setLoadedSectors] = useState<Set<string>>(() => new Set(["energy"]));
   const [isA11yOpen, setIsA11yOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeProcessCard, setActiveProcessCard] = useState<number | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Lazy-load sector background images upon hover or selection
+  useEffect(() => {
+    setLoadedSectors((prev) => {
+      if (prev.has(activeSectorId)) return prev;
+      const next = new Set(prev);
+      next.add(activeSectorId);
+      return next;
+    });
+  }, [activeSectorId]);
 
   // Lock scroll when mobile menu is open
   useEffect(() => {
@@ -578,7 +596,7 @@ export default function Home() {
           <div
             className="mt-10 sm:mt-14 relative w-full min-h-[380px] sm:min-h-[360px] lg:h-96 rounded-none overflow-hidden border border-zinc-200 shadow-xl group bg-cover bg-center"
             style={{
-              backgroundImage: `url('/engineers-at-work.jpg')`,
+              backgroundImage: `image-set(url('/engineers-at-work.webp') type('image/webp'), url('/engineers-at-work.jpg') type('image/jpeg'))`,
             }}
           >
             {/* In-situ field telemetry callout (Styled with transparent glass matching the header) */}
@@ -616,17 +634,20 @@ export default function Home() {
         id="sectors"
         className="relative w-full py-16 sm:py-24 px-4 sm:px-6 border-t border-zinc-200 dark:border-white/[0.06] overflow-hidden transition-colors"
       >
-        {/* Dynamic Industry Background Images (100% Original Quality, Zero Overlays or White Wash) */}
+        {/* Dynamic Industry Background Images with Progressive Format & On-Demand Sector Loading */}
         <div className="absolute inset-0 overflow-hidden">
           {Object.entries(SECTOR_BACKGROUNDS).map(([sectorKey, imgUrl]) => {
             const isCurrent = sectorKey === activeSectorId;
+            const shouldLoad = loadedSectors.has(sectorKey);
             return (
               <div
                 key={sectorKey}
                 className={`absolute inset-0 bg-cover bg-center transition-opacity duration-300 ease-out will-change-[opacity] ${isCurrent ? "opacity-100 z-10" : "opacity-0 pointer-events-none z-0"
                   }`}
                 style={{
-                  backgroundImage: `url('${imgUrl}')`,
+                  backgroundImage: shouldLoad
+                    ? `image-set(url('/industries/${sectorKey}.webp') type('image/webp'), url('${imgUrl}') type('image/jpeg'))`
+                    : undefined,
                 }}
               />
             );
@@ -721,13 +742,16 @@ export default function Home() {
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-center">
           {/* Left Column: Field Operations Photo */}
           <div className="relative overflow-hidden rounded-xs shadow-md">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/fde-model.jpg"
-              alt="Forward Deployed Engineering Model"
-              className="w-full h-auto object-cover block select-none"
-              loading="lazy"
-            />
+            <picture>
+              <source srcSet="/fde-model.webp" type="image/webp" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/fde-model.jpg"
+                alt="Forward Deployed Engineering Model"
+                className="w-full h-auto object-cover block select-none"
+                loading="lazy"
+              />
+            </picture>
           </div>
 
           {/* Right Column: Mission Callout (Left aligned for comfortable mobile reading) */}
@@ -756,7 +780,7 @@ export default function Home() {
         id="hardest-problems"
         className="relative w-full min-h-[85vh] flex items-center justify-center overflow-hidden border-t border-zinc-200 bg-cover bg-center bg-no-repeat transition-all duration-300"
         style={{
-          backgroundImage: `url('/built-for-enterprise.jpg')`,
+          backgroundImage: `image-set(url('/built-for-enterprise.webp') type('image/webp'), url('/built-for-enterprise.jpg') type('image/jpeg'))`,
         }}
       >
         {/* Section Content */}
@@ -920,13 +944,16 @@ export default function Home() {
                   }}
                   className="relative overflow-hidden bg-zinc-100 border border-zinc-200/80 aspect-[480/254] w-full shrink-0"
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src="/thought-leadership.jpg"
-                    alt="Model Context Protocol (MCP) in Retail"
-                    className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
-                    loading="lazy"
-                  />
+                  <picture>
+                    <source srcSet="/thought-leadership.webp" type="image/webp" />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src="/thought-leadership.jpg"
+                      alt="Model Context Protocol (MCP) in Retail"
+                      className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
+                      loading="lazy"
+                    />
+                  </picture>
                 </div>
 
                 <h3 className="flex-1 text-2xl sm:text-3xl lg:text-[2rem] font-normal text-zinc-950 mt-6 mb-8 tracking-tight leading-snug">
@@ -959,13 +986,16 @@ export default function Home() {
                   }}
                   className="relative overflow-hidden bg-zinc-950 border border-zinc-200/80 aspect-[480/254] w-full shrink-0"
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src="/investor-relations.jpg"
-                    alt="Decomposing Enterprise Workflows for Benchmark Design"
-                    className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
-                    loading="lazy"
-                  />
+                  <picture>
+                    <source srcSet="/investor-relations.webp" type="image/webp" />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src="/investor-relations.jpg"
+                      alt="Decomposing Enterprise Workflows for Benchmark Design"
+                      className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
+                      loading="lazy"
+                    />
+                  </picture>
                 </div>
 
                 <h3 className="flex-1 text-2xl sm:text-3xl lg:text-[2rem] font-normal text-zinc-950 mt-6 mb-8 tracking-tight leading-snug">

@@ -51,6 +51,8 @@ export default async function BlogPostPage({
               }}
               className="relative overflow-hidden aspect-[16/9] w-full bg-zinc-100 mb-10 sm:mb-14"
             >
+            <picture>
+              <source srcSet={post.image.replace(/\.jpg$/, ".webp")} type="image/webp" />
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={post.image}
@@ -58,6 +60,7 @@ export default async function BlogPostPage({
                 className="w-full h-full object-cover"
                 loading="eager"
               />
+            </picture>
             </div>
           )}
 

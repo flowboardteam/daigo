@@ -30,12 +30,15 @@ export default function DocumentationPage() {
             className="relative overflow-hidden aspect-[16/9] w-full border border-zinc-200 bg-zinc-100 mb-12 sm:mb-16"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/documentation.jpg"
-              alt="The Forward Deployed Engineer (FDE) Model"
-              className="w-full h-full object-cover"
-              loading="eager"
-            />
+            <picture>
+              <source srcSet="/documentation.webp" type="image/webp" />
+              <img
+                src="/documentation.jpg"
+                alt="The Forward Deployed Engineer (FDE) Model"
+                className="w-full h-full object-cover"
+                loading="eager"
+              />
+            </picture>
           </div>
 
           {/* Documentation Body */}
