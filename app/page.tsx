@@ -832,32 +832,6 @@ export default function Home() {
             aria-roledescription="carousel"
             aria-label="Industries carousel"
           >
-            {/* Top Carousel Navigation Arrows */}
-            <div className="flex items-center justify-end mb-3 px-1 gap-2">
-              <button
-                type="button"
-                aria-label="Previous industry"
-                onClick={() => scrollToIndustry(activeIndustryIndex - 1)}
-                disabled={activeIndustryIndex === 0}
-                className="w-8 h-8 rounded-full bg-black/50 border border-white/20 backdrop-blur-md flex items-center justify-center text-white disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-all cursor-pointer"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-              <button
-                type="button"
-                aria-label="Next industry"
-                onClick={() => scrollToIndustry(activeIndustryIndex + 1)}
-                disabled={activeIndustryIndex === 5}
-                className="w-8 h-8 rounded-full bg-black/50 border border-white/20 backdrop-blur-md flex items-center justify-center text-white disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-all cursor-pointer"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            </div>
-
             {/* Horizontal Snap Track */}
             <div
               ref={industryCarouselRef}
@@ -902,8 +876,8 @@ export default function Home() {
               })}
             </div>
 
-            {/* Bottom Dots Navigation & Swipe Hint */}
-            <div className="flex items-center justify-between mt-2.5 px-1">
+            {/* Bottom Dots Navigation */}
+            <div className="flex items-center justify-center mt-3 px-1">
               <div className="flex items-center gap-1.5">
                 {INDUSTRIES.slice(0, 6).map((ind, idx) => {
                   const isActive = idx === activeIndustryIndex;
@@ -923,10 +897,6 @@ export default function Home() {
                   );
                 })}
               </div>
-
-              <span className="text-[11px] font-mono text-white/80 drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] flex items-center gap-1">
-                <span>&larr;</span> Swipe <span>&rarr;</span>
-              </span>
             </div>
 
             {/* Visually hidden polite status for screen readers */}
