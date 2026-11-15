@@ -1100,8 +1100,8 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Bottom Right: Book a Demo Button */}
-          <div className="flex justify-end mt-12 sm:mt-16">
+          {/* Bottom Right / Mobile Centered: Book a Demo Button */}
+          <div className="flex justify-center md:justify-end mt-12 sm:mt-16">
             <Link
               href="/demo"
               className="inline-flex items-center justify-center bg-transparent border border-zinc-950 text-zinc-950 hover:bg-zinc-950 hover:text-white transition-all duration-200 px-8 py-3 text-xs tracking-[0.25em] font-medium uppercase cursor-pointer"
