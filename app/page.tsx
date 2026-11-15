@@ -215,6 +215,7 @@ export default function Home() {
   const [activeSectorId, setActiveSectorId] = useState<string>("energy");
   const [isA11yOpen, setIsA11yOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [activeProcessCard, setActiveProcessCard] = useState<number | null>(null);
   const [activeProcessStep, setActiveProcessStep] = useState<number>(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -1012,17 +1013,28 @@ export default function Home() {
 
           {/* Desktop 4 Cards Grid */}
           <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-            {PROCESS_STEPS.map((step) => (
+            {PROCESS_STEPS.map((step, idx) => (
               <div
                 key={step.num}
-                className="bg-zinc-100/80 text-zinc-950 border border-zinc-200 p-7 sm:p-8 flex flex-col min-h-[220px] lg:min-h-[250px] rounded-xs select-none transition-all duration-300 shadow-sm outline-none focus:outline-none [-webkit-tap-highlight-color:transparent]"
+                onMouseEnter={() => setActiveProcessCard(idx)}
+                onMouseLeave={() => setActiveProcessCard(null)}
+                onClick={() => setActiveProcessCard(activeProcessCard === idx ? null : idx)}
+                className="group bg-zinc-100/80 text-zinc-950 border border-zinc-200 p-7 sm:p-8 flex flex-col justify-start min-h-[300px] sm:min-h-[320px] lg:min-h-[340px] rounded-xs cursor-pointer select-none"
               >
-                <h3 className="text-xl sm:text-2xl font-normal text-zinc-950 tracking-tight mb-4">
+                <h3 className="text-xl sm:text-2xl lg:text-3xl font-normal text-zinc-950 tracking-tight transition-colors">
                   {step.title}
                 </h3>
-                <p className="text-sm sm:text-base font-normal leading-relaxed text-zinc-700">
-                  {step.description}
-                </p>
+                <div className="mt-14 sm:mt-16 lg:mt-20">
+                  <p
+                    className={`text-sm sm:text-base font-normal leading-relaxed transform transition-all duration-300 ease-out ${
+                      activeProcessCard === idx
+                        ? "-translate-y-2.5 text-zinc-950 font-medium"
+                        : "translate-y-0 text-zinc-700 group-hover:-translate-y-2.5 group-hover:text-zinc-950 group-hover:font-medium"
+                    }`}
+                  >
+                    {step.description}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
