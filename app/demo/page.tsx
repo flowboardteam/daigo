@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import SubpageHeader, { DaigoIcon } from "../components/SubpageHeader";
+import { isWorkEmail } from "@/lib/is-work-email";
 
 export default function DemoPage() {
   const [step, setStep] = useState(0);
@@ -42,7 +43,7 @@ export default function DemoPage() {
         return false;
       }
     } else if (step === 1) {
-      if (!formData.email.trim() || !formData.email.includes("@")) {
+      if (!isWorkEmail(formData.email)) {
         setErrorMsg("Please enter a valid work email address");
         return false;
       }
@@ -74,6 +75,11 @@ export default function DemoPage() {
   };
 
   const handleSubmit = async () => {
+    if (!isWorkEmail(formData.email)) {
+      setErrorMsg("Please enter a valid work email address");
+      return;
+    }
+
     setIsSubmitting(true);
     setErrorMsg("");
 

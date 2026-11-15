@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isWorkEmail } from "@/lib/is-work-email";
 
 interface DemoRequestPayload {
   name: string;
@@ -17,6 +18,13 @@ export async function POST(request: Request) {
     if (!name?.trim() || !email?.trim()) {
       return NextResponse.json(
         { error: "Name and work email are required." },
+        { status: 400 }
+      );
+    }
+
+    if (!isWorkEmail(email)) {
+      return NextResponse.json(
+        { error: "Please enter a valid work email address" },
         { status: 400 }
       );
     }
