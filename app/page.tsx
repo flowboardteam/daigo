@@ -36,6 +36,13 @@ function SeamlessHeroVideo() {
   const videoRefB = useRef<HTMLVideoElement>(null);
   const [activeSlot, setActiveSlot] = useState<"A" | "B">("A");
   const isTransitioning = useRef(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.innerWidth <= 768) {
+      setIsMobile(true);
+    }
+  }, []);
 
   useEffect(() => {
     const vA = videoRefA.current;
@@ -129,14 +136,13 @@ function SeamlessHeroVideo() {
         loop
         muted
         playsInline
-        preload="metadata"
+        preload="auto"
         poster="/1115-poster.webp"
         style={{ transition: "opacity 500ms ease-in-out" }}
         className={`absolute inset-0 w-full h-full object-cover ${activeSlot === "A" ? "opacity-100 z-10" : "opacity-0 z-0"
           }`}
       >
-        <source src="/1115-mobile.mp4" type="video/mp4" media="(max-width: 768px)" />
-        <source src="/1115.mp4" type="video/mp4" />
+        <source src={isMobile ? "/1115-mobile.mp4" : "/1115.mp4"} type="video/mp4" />
       </video>
 
       {/* Video Slot B - Standby buffer with metadata preload to prevent bandwidth contention */}
@@ -151,8 +157,7 @@ function SeamlessHeroVideo() {
         className={`absolute inset-0 w-full h-full object-cover ${activeSlot === "B" ? "opacity-100 z-10" : "opacity-0 z-0"
           }`}
       >
-        <source src="/1115-mobile.mp4" type="video/mp4" media="(max-width: 768px)" />
-        <source src="/1115.mp4" type="video/mp4" />
+        <source src={isMobile ? "/1115-mobile.mp4" : "/1115.mp4"} type="video/mp4" />
       </video>
     </div>
   );
